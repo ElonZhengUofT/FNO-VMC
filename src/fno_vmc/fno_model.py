@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from neural_operator import FNO2d
+from neuralop.models import FNO2d
 
 
 class FNOAnsatz(nn.Module):

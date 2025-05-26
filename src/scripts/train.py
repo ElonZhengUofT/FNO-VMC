@@ -2,6 +2,7 @@
 import argparse
 import logging
 import os
+import torch.nn as nn
 from src.fno_vmc.util import load_config, set_logger
 from src.fno_vmc.hamiltonian import make_hamiltonian
 from src.fno_vmc.Ansatz import make_ansatz
@@ -36,12 +37,19 @@ def main():
         params=cfg["hamiltonian"]["params"]
     )
 
+    # 在 train.py 中 make_ansatz 之前
+    # logging.info(f"Creating ansatz with params: {cfg.get('model_params')}")
+
     # build ansatz
     model = make_ansatz(
         kind=args.ansatz,
         dim=cfg["hamiltonian"]["params"]["dim"],
         **cfg.get("model_params", {})
     )
+
+    # Cold start: log ansatz type and parameters
+    for p in model.parameters():
+        p.data.zero_()
 
     # train
     trainer = VMCTrainer(

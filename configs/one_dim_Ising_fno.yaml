@@ -1,0 +1,18 @@
+# configs/one_dim_Ising_fno.yaml
+
+hamiltonian:
+  type: ising
+  params:
+    L: 50               # 链长（格点数）
+    dim: 1              # 空间维数，一维 Ising 就填 1
+    pbc: True           # 是否周期边界
+
+model_params:
+  modes1: 16             # FNO 的 Fourier 模式数
+  width: 64             # FNO 网络通道数
+
+vmc:
+  n_samples: 1000       # Monte Carlo 采样数
+  lr: 1e-5         # 学习率
+  n_iter: 500           # 迭代次数
+  init_state: random
