@@ -6,10 +6,10 @@
 export PYTHONUNBUFFERED=1
 
 # 2. Change to the project root directory (make sure this path matches your actual path in the Pod)
-cd /workspace/FNO-VMC || {
-  echo "Error: 无法切换到 /workspace/FNO-VMC，请确认路径是否正确"
-  exit 1
-}
+# cd /workspace/FNO-VMC || {
+  #  echo "Error: 无法切换到 /workspace/FNO-VMC，请确认路径是否正确"
+  #  exit 1
+  #}
 
 # 3. （可选）如果你的镜像里有 conda 环境，需要先激活：
 #    例如镜像自带名为 'base' 或者 'pytorch' 的 conda 环境，就写：
