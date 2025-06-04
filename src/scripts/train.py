@@ -36,6 +36,7 @@ def main():
     cfg = load_config(args.config)
 
     # initialize Weights & Biases
+    wandb.login(key="9648574da18d2bf024ef72f8f5b196d410e674d4")
     wandb.init(
         project = args.wandb_project,
         config = cfg,
@@ -62,7 +63,7 @@ def main():
     # Cold start: log ansatz type and parameters
     #     for p in model.parameters():
     #         p.data.zero_()
-    wandb.watch_callable(model)
+    # wandb.watch_callable(model)
 
     # train
     trainer = VMCTrainer(
