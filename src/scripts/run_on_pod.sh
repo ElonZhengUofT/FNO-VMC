@@ -26,7 +26,8 @@ export PYTHONPATH=/workspace/FNO-VMC:$PYTHONPATH
 #    - 如果容器里 /usr/bin/python3 就是你要的解释器，可以直接用 python3。
 #    - 如果需要指定特定路径，比如 /opt/conda/bin/python，则把下面 python3 换成该路径。
 
-python3 src/scripts/train.py jlts/fno_run \
+python3 src/scripts/train.py --ansatz fno \
+    --config configs/one_dim_ising_fno.yaml \
     --logfile logs/fno_run.log \
     --wandb_project FNO-VMC
 
