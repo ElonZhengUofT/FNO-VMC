@@ -5,6 +5,8 @@
 
 export PYTHONUNBUFFERED=1
 
+#!/usr/bin/env bash
+export PYTHONPATH=/workspace/FNO-VMC:$PYTHONPATH
 # 2. Change to the project root directory (make sure this path matches your actual path in the Pod)
 # cd /workspace/FNO-VMC || {
   #  echo "Error: 无法切换到 /workspace/FNO-VMC，请确认路径是否正确"
@@ -23,6 +25,7 @@ export PYTHONUNBUFFERED=1
 # 4. 用 Python3 运行 train.py
 #    - 如果容器里 /usr/bin/python3 就是你要的解释器，可以直接用 python3。
 #    - 如果需要指定特定路径，比如 /opt/conda/bin/python，则把下面 python3 换成该路径。
+
 python3 src/scripts/train.py jlts/fno_run \
     --logfile logs/fno_run.log \
     --wandb_project FNO-VMC
