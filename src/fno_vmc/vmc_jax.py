@@ -64,6 +64,7 @@ class VMCTrainer:
             logging.getLogger().addHandler(logging.FileHandler(logfile))
 
         def _wandb_callback(step, loss, params):
+            print(f">>>> callback, step = {step}, energy = {loss.get('energy')}")
             if self.logger is not None:
                 # Log the things you want to track
                 energy = loss.get("energy")
@@ -72,12 +73,17 @@ class VMCTrainer:
                 self.logger.log({
                     "step": step,
                     "energy": energy,
-                    "variance": variance,
-                    "params": params
+                    "variance": variance
+                    # "params": params
                 }, step=step)
+            return True
+        #TODO: check if we can pass some information of param to wandb
 
-            self.logger.run(
-                self.n_iter,
-                out=out,
-                callback=_wandb_callback
-            )
+        print(">>>>> VMCTrainer.run() 开始执行 —— out =", out)
+        print(f">>>>> VMCTrainer.run()：self.n_iter = {self.n_iter}")
+        self.driver.run(
+            self.n_iter,
+            out=out,
+            callback=_wandb_callback
+        )
+        print(">>>>> VMCTrainer.run() 执行结束")
