@@ -4,7 +4,7 @@ from .fno_model_jax import FNOAnsatzFlax
 from .tn_model import TNAnsatz
 
 
-class BaseAnsatz(ABC):
+class BaseAnsatzJax(ABC):
     """Abstract base for variational ansatz for NetKet."""
     @abstractmethod
     def init(self, *args, **kwargs):  # for NetKet
@@ -15,7 +15,7 @@ class BaseAnsatz(ABC):
         pass
 
 
-def make_ansatz(kind: str, dim: int, **kwargs) -> nn.Module:
+def make_ansatz_jax(kind: str, dim: int, **kwargs) -> nn.Module:
     """
     Factory to create JAX/Flax ansatz for NetKet.
     Returns a flax.linen.Module with init and apply.

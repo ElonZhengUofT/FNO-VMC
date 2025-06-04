@@ -2,11 +2,13 @@
 import argparse
 import logging
 import os
+import wandb
 import torch.nn as nn
 from src.fno_vmc.util import load_config, set_logger
 from src.fno_vmc.hamiltonian import make_hamiltonian
-from src.fno_vmc.Ansatz import make_ansatz
-from src.fno_vmc.vmc import VMCTrainer
+# from src.fno_vmc.Ansatz import make_ansatz
+from src.fno_vmc.AnsatzJax import make_ansatz_jax
+from src.fno_vmc.vmc_jax import VMCTrainer
 
 
 def main():
@@ -19,6 +21,8 @@ def main():
                         help="Directory to save outputs (default: results)")
     parser.add_argument("--logfile", type=str, default=None,
                         help="Optional file to log training output")
+    parser.add_argument("--wandb_project", type=str, default="FNO-VMC",
+                        help="wandb project name")
     args = parser.parse_args()
 
     # setup output directory
@@ -31,6 +35,14 @@ def main():
     # load configuration
     cfg = load_config(args.config)
 
+    # initialize Weights & Biases
+    wandb.init(
+        project = args.wandb_project,
+        config = cfg,
+        name = f"{args.ansatz}-{os.path.basename(args.config)}"
+    )
+    wandb.watch_callable = lambda m: wandb.watch(m, log="all", log_freq=50)
+
     # build Hamiltonian
     hilbert, hamiltonian = make_hamiltonian(
         ham_type=cfg["hamiltonian"]["type"],
@@ -41,22 +53,24 @@ def main():
     # logging.info(f"Creating ansatz with params: {cfg.get('model_params')}")
 
     # build ansatz
-    model = make_ansatz(
+    model = make_ansatz_jax(
         kind=args.ansatz,
         dim=cfg["hamiltonian"]["params"]["dim"],
         **cfg.get("model_params", {})
     )
 
     # Cold start: log ansatz type and parameters
-    for p in model.parameters():
-        p.data.zero_()
+    #     for p in model.parameters():
+    #         p.data.zero_()
+    wandb.watch_callable(model)
 
     # train
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
         ansatz_model=model,
-        vmc_params=cfg.get("vmc", {})
+        vmc_params=cfg.get("vmc", {}),
+        logger = wandb
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
 

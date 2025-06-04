@@ -2,7 +2,7 @@
 
 import jax.numpy as jnp
 import flax.linen as nn
-from neuralop.models import FNO2d  # if neuralop has JAX version; otherwise reimplement FNO in JAX
+from .fno_jax import FNO2d
 
 class FNOAnsatzFlax(nn.Module):
     """FNO-based variational ansatz in Flax for NetKet MCState."""
