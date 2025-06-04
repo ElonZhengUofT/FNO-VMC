@@ -77,7 +77,7 @@ class VMCTrainer:
                     # "params": params
                 }, step=step)
             return True
-        #TODO: check if we can pass some information of param to wandb
+        # check if we can pass some information of param to wandb
 
         print(">>>>> VMCTrainer.run() 开始执行 —— out =", out)
         print(f">>>>> VMCTrainer.run()：self.n_iter = {self.n_iter}")
