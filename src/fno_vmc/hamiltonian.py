@@ -41,9 +41,17 @@ def make_hamiltonian(ham_type: str, params: dict):
 
     graph = nk.graph.Hypercube(length=L, n_dim=dim, pbc=pbc)
     N_sites = graph.n_nodes
-    hilbert = nk.hilbert.Spin(s=0.5, N=N_sites)
 
     t = ham_type.lower()
+
+    if t in ["ising", "heisenberg", "xxz", "j1j2", "j1j2_heisenberg"]:
+        hilbert = nk.hilbert.Spin(s=0.5, N=N_sites)
+    elif t in ["hubbard", "fermihubbard"]:
+        n_particles = params.get("n_particles", None)
+        if n_particles is None:
+            raise ValueError("n_particles must be specified for Hubbard model.")
+        hilbert = nk.hilbert.Fock(n_max=1, N=N_sites,
+                                  n_particles=n_particles)
 
     # spin Hamiltonians
     if t == "ising":
@@ -67,6 +75,10 @@ def make_hamiltonian(ham_type: str, params: dict):
         J2 = params.get("J2", 0.0)
         edges = generate_j2_edges(L, pbc=pbc)
         op = nk.operator.J1J2Heisenberg(hilbert, J1=J1, J2=J2, edges=edges)
+    elif t == "hubbard":
+        U = params.get("U", 4.0)
+        t_hop = params.get("t", 1.0)
+        op = nk.operator.FermiHubbard(hilbert, U=U, t=t_hop, graph=graph)
     else:
         raise ValueError(f"Unknown Hamiltonian type: {ham_type}")
 
