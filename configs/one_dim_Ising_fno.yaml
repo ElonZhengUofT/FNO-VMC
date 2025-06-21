@@ -3,7 +3,7 @@
 hamiltonian:
   type: ising
   params:
-    L: 50               # 链长（格点数）
+    L: 500               # 链长（格点数）
     dim: 1              # 空间维数，一维 Ising 就填 1
     pbc: True           # 是否周期边界
 
