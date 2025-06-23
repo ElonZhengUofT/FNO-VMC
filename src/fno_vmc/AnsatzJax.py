@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import torch.nn as nn
+import flax.linen as nn
 from .fno_model_jax import FNOAnsatzFlax
 from .tn_model import TNAnsatz
 
