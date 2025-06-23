@@ -1,8 +1,8 @@
 hamiltonian:
   type: heisenberg      # 注意小写，与代码一致
   params:
-    Lx: 8              # x方向格点数（你可以改成你需要的大小）
-    Ly: 8              # y方向格点数
+    Lx: 4              # x方向格点数（你可以改成你需要的大小）
+    Ly: 4              # y方向格点数
     dim: 2             # 二维系统
     J: 1.0             # 耦合常数
     pbc: True          # 是否周期边界
@@ -14,7 +14,7 @@ model_params:
   width: 64            # FNO 网络通道数
 
 vmc:
-  n_samples: 1000      # Monte Carlo 采样数
+  n_samples: 256 #1000      # Monte Carlo 采样数
   lr: 1e-5             # 学习率
   n_iter: 500          # 迭代次数
   init_state: random   # 初始自旋配置，可选 random 或 updown
