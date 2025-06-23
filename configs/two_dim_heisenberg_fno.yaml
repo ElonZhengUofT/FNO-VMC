@@ -11,7 +11,7 @@ hamiltonian:
 model_params:
   modes1: 8           # FNO 的 Fourier 模式数（x方向）
   modes2: 8           # FNO 的 Fourier 模式数（y方向）
-  width: 64            # FNO 网络通道数
+  width: 32            # FNO 网络通道数
 
 vmc:
   n_samples: 256 #1000      # Monte Carlo 采样数
