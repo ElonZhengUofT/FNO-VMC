@@ -4,11 +4,14 @@ import logging
 import os
 import wandb
 import torch.nn as nn
+import netket as nk
 from src.fno_vmc.util import load_config, set_logger
 from src.fno_vmc.hamiltonian import make_hamiltonian
 # from src.fno_vmc.Ansatz import make_ansatz
 from src.fno_vmc.AnsatzJax import make_ansatz_jax
 from src.fno_vmc.vmc_jax import VMCTrainer
+import jax.numpy as jnp
+import jax
 
 
 def main():
@@ -54,11 +57,20 @@ def main():
     # logging.info(f"Creating ansatz with params: {cfg.get('model_params')}")
 
     # build ansatz
+    rng = jax.random.PRNGKey(0)
     model = make_ansatz_jax(
         kind=args.ansatz,
         dim=cfg["hamiltonian"]["params"]["dim"],
         **cfg.get("model_params", {})
     )
+    Lx = cfg["hamiltonian"]["params"]["Lx"]
+    Ly = cfg["hamiltonian"]["params"]["Ly"]
+    dummy_x = jnp.ones((1, Lx * Ly))
+    params = model.init(rng, dummy_x)
+
+    states = hilbert.random_state(jax.random.PRNGKey(42), 100)  # 100组随机自旋
+    log_psi = model.apply(params, states)
+    print("log_psi mean:", log_psi.mean(), "std:", log_psi.std())
 
     # Cold start: log ansatz type and parameters
     #     for p in model.parameters():
@@ -69,7 +81,7 @@ def main():
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
-        ansatz_model=model,
+        ansatz_model= model,
         vmc_params=cfg.get("vmc", {}),
         logger = wandb
     )

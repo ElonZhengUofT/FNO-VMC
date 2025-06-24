@@ -9,8 +9,8 @@ hamiltonian:
     Sz_total: 0        # 总磁量子数（如无需求可不写）
 
 model_params:
-  modes1: 4           # FNO 的 Fourier 模式数（x方向）
-  modes2: 4           # FNO 的 Fourier 模式数（y方向）Number of modes should be less than or equal to Lx and Ly
+  modes1: 3           # FNO 的 Fourier 模式数（x方向）
+  modes2: 3           # FNO 的 Fourier 模式数（y方向）Number of modes should be less than or equal to Lx and Ly
   width: 32            # FNO 网络通道数
 
 vmc:

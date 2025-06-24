@@ -26,7 +26,7 @@ class VMCTrainer:
             sampler=sampler,
             model=machine,
             n_samples=vmc_params.get('n_samples', 1000),
-            init_fun=random_init,
+            init_fun=hilbert.random_state
         )
 
         # 4) directly pass the optimizer to the VMC driver
@@ -57,6 +57,9 @@ class VMCTrainer:
 
         self.n_iter = vmc_params.get('n_iter', 200)
         self.logger = logger
+        self.energy_list = []
+        self.variance_list = []
+        self.step_list = []
 
     def run(self, out='result', logfile=None):
         if logfile:

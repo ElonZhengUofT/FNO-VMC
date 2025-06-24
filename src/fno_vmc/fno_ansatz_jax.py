@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from .fno_jax import FNO2d
 from flax import linen as nn
 
-class FNOAnsatzJax(nn.Module):
+class FNOAnsatzFlax(nn.Module):
     """FNO-based variational ansatz."""
     dim: int
     modes1: int
@@ -26,5 +26,6 @@ class FNOAnsatzJax(nn.Module):
         # global average pooling over spatial dims
         features = jnp.mean(out, axis=(1,2))  # shape (batch, width)
         # final linear head
-        log_psi = nn.Dense(1)(features).squeeze(-1)  # shape (batch,)
+        log_psi = nn.Dense(1, kernel_init=nn.initializers.normal(1e-2))(
+            features).squeeze(-1)
         return log_psi

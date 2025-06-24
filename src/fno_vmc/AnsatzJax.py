@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import flax.linen as nn
-from .fno_model_jax import FNOAnsatzFlax
+from .fno_ansatz_jax import FNOAnsatzFlax
 from .tn_model import TNAnsatz
 
 
