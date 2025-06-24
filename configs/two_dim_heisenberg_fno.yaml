@@ -15,6 +15,6 @@ model_params:
 
 vmc:
   n_samples: 128 #1000      # Monte Carlo 采样数
-  lr: 1e-5             # 学习率
+  lr: 1e-3             # 学习率
   n_iter: 500          # 迭代次数
   init_state: random   # 初始自旋配置，可选 random 或 updown
