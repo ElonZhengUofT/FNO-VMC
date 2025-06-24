@@ -11,10 +11,10 @@ hamiltonian:
 model_params:
   modes1: 3           # FNO 的 Fourier 模式数（x方向）
   modes2: 3           # FNO 的 Fourier 模式数（y方向）Number of modes should be less than or equal to Lx and Ly
-  width: 32            # FNO 网络通道数
+  width: 16            # FNO 网络通道数
 
 vmc:
-  n_samples: 256 #1000      # Monte Carlo 采样数
+  n_samples: 128 #1000      # Monte Carlo 采样数
   lr: 1e-5             # 学习率
   n_iter: 500          # 迭代次数
   init_state: random   # 初始自旋配置，可选 random 或 updown
