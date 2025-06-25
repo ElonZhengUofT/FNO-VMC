@@ -28,5 +28,8 @@ def make_ansatz_jax(kind: str, dim: int, **kwargs) -> nn.Module:
         return FNOAnsatzFlax(dim=dim, **kwargs)
     elif kind == "tn":
         return TNAnsatz(dim=dim, **kwargs)
+    elif kind == "RBM":
+        from netket.models import RBM
+        return RBM(n_visible=dim, **kwargs)
     else:
         raise ValueError(f"Unknown ansatz kind: {kind}")

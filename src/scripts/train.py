@@ -63,14 +63,15 @@ def main():
         dim=cfg["hamiltonian"]["params"]["dim"],
         **cfg.get("model_params", {})
     )
-    Lx = cfg["hamiltonian"]["params"]["Lx"]
-    Ly = cfg["hamiltonian"]["params"]["Ly"]
-    dummy_x = jnp.ones((1, Lx * Ly))
-    params = model.init(rng, dummy_x)
+    Lx = cfg["hamiltonian"]["params"]["L"]
+    Ly = cfg["hamiltonian"]["params"]["L"] if cfg["hamiltonian"]["params"]["dim"] == 2 else 1
+    # dummy_x = jnp.ones((1, Lx * Ly)) if cfg["hamiltonian"]["params"]["dim"] == 2 else jnp.ones((Lx * Ly, 1))
+    # params = model.init(rng, dummy_x)
+    # states = hilbert.random_state(jax.random.PRNGKey(42), 100)  # 100组随机自旋
+    # log_psi = model.apply(params, states)
+    # print("log_psi mean:", log_psi.mean(), "std:", log_psi.std())
+    # These sentences is for the test of init of flax model
 
-    states = hilbert.random_state(jax.random.PRNGKey(42), 100)  # 100组随机自旋
-    log_psi = model.apply(params, states)
-    print("log_psi mean:", log_psi.mean(), "std:", log_psi.std())
 
     # Cold start: log ansatz type and parameters
     #     for p in model.parameters():
@@ -78,6 +79,7 @@ def main():
     # wandb.watch_callable(model)
 
     # train
+    # model = nk.models.RBM() # A Test model, replace when debug is done
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,

@@ -1,20 +1,20 @@
 hamiltonian:
   type: heisenberg      # Type of Hamiltonian
   params:
-    L: 22                # 系统大小(Lx = Ly)
-    dim: 1             # Dimension of the system
+    L: 4               # 系统大小(Lx = Ly)
+    dim: 2             # Dimension of the system
     J: 1.0             # The coupling constant
     pbc: True          # Whether the system has periodic boundary conditions
     Sz_total: 0        # Total spin in z direction
 
 model_params:
-  modes1: 1           # Number of modes in the Fourier basis (x direction) Number of modes should be less than or equal to Lx and Ly
-  modes2: 1           # Number of modes in the Fourier basis (y direction)
+  modes1: 3           # Number of modes in the Fourier basis (x direction) Number of modes should be less than or equal to Lx and Ly
+  modes2: 3           # Number of modes in the Fourier basis (y direction)
   width: 16            # Number of channels in the hidden layers
 
 vmc:
   n_samples: 2048 #1000      # Number of samples for VMC
-  lr: 1e-2             # Learning rate for the optimizer
+  lr: 1e-4             # Learning rate for the optimizer
   sr: True            # Whether to use stochastic reconfiguration
   n_iter: 500          # Number of iterations for VMC
   init_state: random   # Initial state for the wave function, can be 'random' or 'ground_state'

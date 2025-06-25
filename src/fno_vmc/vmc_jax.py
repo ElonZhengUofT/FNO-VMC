@@ -2,20 +2,20 @@ import netket as nk
 import numpy as np
 import jax
 import optax
-
-
-def random_init(rng_key, n_chains):
-    # 生成形状 (n_chains, L) 的随机 {+1, -1} 自旋阵列
-    L = hilbert.size
-    # uniform in {0,1}, 然后映射到 ±1
-    bits = jax.random.randint(rng_key, (n_chains, L), 0, 2)
-    return 2 * bits - 1
-
+import matplotlib.pyplot as plt
+import os
+import wandb
 
 class VMCTrainer:
     def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None):
         # 1) prepare sampler
-        sampler = nk.sampler.MetropolisLocal(hilbert)
+        sampler = nk.sampler.MetropolisLocal(
+            hilbert,
+            n_chains=128,
+            n_sweeps=2
+        )
+
+        print("Hamiltonian:", hamiltonian)
 
         # 2) wrap the PyTorch model with TorchModule
 
@@ -33,13 +33,11 @@ class VMCTrainer:
         lr = float(vmc_params.get("lr", 1e-3))
 
         if vmc_params.get('sr', False):
-            precond = make_sr_optimizer(
-                diagshift=vmc_params.get("diagshift", 0.01))
+            print(">>>>> VMCTrainer: Using SR optimizer")
             # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
-            opt = nk.optimizer.SR(
-                gradient_transform=optax.adam(learning_rate=lr),
-                diagshift=float(vmc_params.get("diagshift", 0.01)),
-            )
+            opt = nk.optimizer.Adam(learning_rate=lr)
+            precond = nk.optimizer.SR(diag_shift=float(
+                vmc_params.get("diagshift", 0.01)))
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
@@ -47,6 +45,7 @@ class VMCTrainer:
                 preconditioner=precond,
             )
         else:
+            print(">>>>> VMCTrainer: Using Adam optimizer")
             opt = nk.optimizer.Adam(learning_rate=lr)
             self.driver = nk.driver.VMC(
                 hamiltonian,
@@ -56,9 +55,15 @@ class VMCTrainer:
 
 
         self.n_iter = vmc_params.get('n_iter', 200)
+
         self.logger = logger
+
+        self.hilbert = hilbert
+        self.hamiltonian = hamiltonian
+
         self.energy_list = []
         self.variance_list = []
+        self.acceptance_list = []
         self.step_list = []
 
     def run(self, out='result', logfile=None):
@@ -67,16 +72,25 @@ class VMCTrainer:
             logging.getLogger().addHandler(logging.FileHandler(logfile))
 
         def _wandb_callback(step, loss, params):
-            print(f">>>> callback, step = {step}, energy = {loss.get('energy')}")
+            print(f">>>> callback, step = {step}, energy = {loss.get('Energy')}")
+            samples = self.vstate.samples
+
+            acceptance = float(loss.get("acceptance", np.nan))
+            stats = loss["Energy"]
+            energy = float(stats.mean)  # e.g. 28.33
+            variance = float(stats.variance)  # e.g. 77.66
+
+            print(f">>>> callback, step = {step}, "
+                  f"energy = {energy:.4f}, variance = {variance:.4f}, "
+                  f"acceptance = {acceptance:.4f}")
+
             if self.logger is not None:
                 # Log the things you want to track
-                energy = loss.get("energy")
-                variance = loss.get("variance")
                 # push to wandb
                 self.logger.log({
-                    "step": step,
-                    "energy": energy,
-                    "variance": variance
+                    "train/energy": energy,
+                    "train/variance": variance,
+                    "train/acceptance": acceptance
                     # "params": params
                 }, step=step)
             return True
@@ -89,4 +103,5 @@ class VMCTrainer:
             out=out,
             callback=_wandb_callback
         )
+
         print(">>>>> VMCTrainer.run() 执行结束")

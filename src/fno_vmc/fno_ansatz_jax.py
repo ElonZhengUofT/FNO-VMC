@@ -9,17 +9,19 @@ class FNOAnsatzFlax(nn.Module):
     modes1: int
     modes2: int = None
     width: int = 32
+    channel: int = 1  # number of output channels, default is 1 for scalar output
 
     @nn.compact
     def __call__(self, x):
         batch = x.shape[0]
         # reshape input to image grid
+        batch, features = x.shape[0], x.shape[-1]
         if self.dim == 1:
-            L = x.shape[1]
-            u = x.reshape(batch, L, 1, 1)
+            L = features // self.channel
+            u = x.reshape(batch, L, 1, self.channel)
         else:
-            L = int(x.shape[1]**0.5)
-            u = x.reshape(batch, L, L, 1)
+            L = int((features / self.channel) ** 0.5)
+            u = x.reshape(batch, L, L, self.channel)
         # apply FNO (expects NHWC)
         modes2 = self.modes2 or 1
         out = FNO2d(modes1=self.modes1, modes2=modes2, width=self.width)(u)

@@ -1,0 +1,26 @@
+# two_dim_hubbard_fno.yaml
+
+hamiltonian:
+  type: hubbard      # Type of Hamiltonian
+  params:
+    L: 4                # Lattice size (Lx = Ly)
+    dim: 2               # dimension of the system
+    U: 4.0               # Coulomb interaction strength
+    t: 1.0               # Jumping term
+    pbc: True            # Periodic boundary conditions
+    # for half-filling with Sz_total=0, take N_up = N_down = L*L/2
+    n_particles: [8, 8]  # Number of particles [N_up, N_down]
+
+model_params:
+  # FNO ansatz 的超参数
+  modes1: 1           # Number of Fourier modes in x direction (≤ L)
+  modes2: 1           # Number of Fourier modes in y direction (≤ L)
+  width: 16           # Hidden layer width (number of channels)
+  channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
+
+vmc:
+  n_samples: 2048     # Number of samples for VMC
+  lr: 1e-2            # Learning rate for the optimizer
+  sr: True            # Whether to use stochastic reconfiguration
+  n_iter: 500         # Number of iterations for VMC
+  init_state: random  # Initial state for the wave function, can be 'random' or 'ground_state'
