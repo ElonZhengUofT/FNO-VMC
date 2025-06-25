@@ -78,7 +78,7 @@ def main():
     #         p.data.zero_()
     # wandb.watch_callable(model)
 
-    # train
+    # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
     trainer = VMCTrainer(
         hilbert=hilbert,
