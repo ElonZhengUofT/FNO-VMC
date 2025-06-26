@@ -10,7 +10,7 @@ hamiltonian:
 model_params:
   modes1: 8           # Number of modes in the Fourier basis (x direction) Number of modes should be less than or equal to Lx and Ly
   modes2: 5           # Number of modes in the Fourier basis (y direction)
-  width: 32            # Number of channels in the hidden layers
+  width: 16            # Number of channels in the hidden layers
 
 vmc:
   n_samples: 2048 #1000      # Number of samples for VMC
