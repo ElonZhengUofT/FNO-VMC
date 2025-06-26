@@ -47,6 +47,12 @@ def main():
     )
     wandb.watch_callable = lambda m: wandb.watch(m, log="all", log_freq=50)
 
+    wandb.config.update(cfg, allow_val_change=True)
+
+    artifact = wandb.Artifact(f"{args.ansatz}_config", type="config")
+    artifact.add_file(args.config)
+    wandb.log_artifact(artifact)
+
     # build Hamiltonian
     hilbert, hamiltonian = make_hamiltonian(
         ham_type=cfg["hamiltonian"]["type"],
@@ -88,6 +94,7 @@ def main():
         logger = wandb
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
+
 
 
 if __name__ == '__main__':

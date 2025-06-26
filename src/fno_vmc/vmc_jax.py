@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import os
 import wandb
 
+ENERGY_MIN, ENERGY_MAX = -100000, 100000
+
 class VMCTrainer:
     def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None):
         # 1) prepare sampler
@@ -83,6 +85,9 @@ class VMCTrainer:
             print(f">>>> callback, step = {step}, "
                   f"energy = {energy:.4f}, variance = {variance:.4f}, "
                   f"acceptance = {acceptance:.4f}")
+
+            if energy < ENERGY_MIN or energy > ENERGY_MAX:
+                energy = np.nan
 
             if self.logger is not None:
                 # Log the things you want to track

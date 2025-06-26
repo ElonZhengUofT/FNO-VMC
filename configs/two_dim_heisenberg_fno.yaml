@@ -1,7 +1,7 @@
 hamiltonian:
   type: heisenberg      # Type of Hamiltonian
   params:
-    L: 4                # 系统大小(Lx = Ly)
+    L: 8                # 系统大小(Lx = Ly)
     dim: 2             # Dimension of the system
     J: 1.0             # The coupling constant
     pbc: True          # Whether the system has periodic boundary conditions
