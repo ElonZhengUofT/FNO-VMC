@@ -8,9 +8,9 @@ hamiltonian:
     Sz_total: 0        # Total spin in z direction
 
 model_params:
-  modes1: 1           # Number of modes in the Fourier basis (x direction) Number of modes should be less than or equal to Lx and Ly
-  modes2: 1           # Number of modes in the Fourier basis (y direction)
-  width: 16            # Number of channels in the hidden layers
+  modes1: 8           # Number of modes in the Fourier basis (x direction) Number of modes should be less than or equal to Lx and Ly
+  modes2: 8           # Number of modes in the Fourier basis (y direction)
+  width: 32            # Number of channels in the hidden layers
 
 vmc:
   n_samples: 2048 #1000      # Number of samples for VMC
