@@ -13,9 +13,9 @@ hamiltonian:
 
 model_params:
   # FNO ansatz 的超参数
-  modes1: 1           # Number of Fourier modes in x direction (≤ L)
-  modes2: 1           # Number of Fourier modes in y direction (≤ L)
-  width: 16           # Hidden layer width (number of channels)
+  modes1: 8           # Number of Fourier modes in x direction (≤ L)
+  modes2: 5           # Number of Fourier modes in y direction (≤ L)
+  width: 32           # Hidden layer width (number of channels)
   channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
 
 vmc:
