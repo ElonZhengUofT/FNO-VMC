@@ -12,7 +12,6 @@ from src.fno_vmc.AnsatzJax import make_ansatz_jax
 from src.fno_vmc.vmc_jax import VMCTrainer
 import jax.numpy as jnp
 import jax
-jax.config.update("jax_enable_x64", True)
 
 
 def main():
