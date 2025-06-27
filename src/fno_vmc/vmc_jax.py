@@ -14,7 +14,7 @@ class VMCTrainer:
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains=128,
-            n_sweeps=2
+            n_sweeps=1
         )
 
         print("Hamiltonian:", hamiltonian)
