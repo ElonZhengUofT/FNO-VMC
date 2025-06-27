@@ -5,11 +5,11 @@ import os
 import wandb
 import torch.nn as nn
 import netket as nk
-from src.fno_vmc.util import load_config, set_logger
-from src.fno_vmc.hamiltonian import make_hamiltonian
-# from src.fno_vmc.Ansatz import make_ansatz
-from src.fno_vmc.AnsatzJax import make_ansatz_jax
-from src.fno_vmc.vmc_jax import VMCTrainer
+from src.fno_vmc_nk.util import load_config, set_logger
+from src.fno_vmc_nk.hamiltonian import make_hamiltonian
+# from src.fno_vmc_nk.Ansatz import make_ansatz
+from src.fno_vmc_nk.AnsatzJax import make_ansatz_jax
+from src.fno_vmc_nk.vmc_jax import VMCTrainer
 import jax.numpy as jnp
 import jax
 
@@ -85,7 +85,7 @@ def main():
     # wandb.watch_callable(model)
 
     # train the model
-    # model = nk.models.RBM() # A Test model, replace when debug is done
+    model = nk.models.RBM() # A Test model, replace when debug is done
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,

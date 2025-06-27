@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import flax.linen as nn
-from .fno_ansatz_jax import FNOAnsatzFlax
-from .tn_model import TNAnsatz
+from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
+from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
 import netket as nk
 
 class BaseAnsatzJax(ABC):

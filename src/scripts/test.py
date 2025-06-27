@@ -2,10 +2,10 @@ import argparse
 import logging
 import os
 import torch
-from src.fno_vmc.util import load_config, set_logger
-from src.fno_vmc.hamiltonian import make_hamiltonian
-from src.fno_vmc.Ansatz import make_ansatz
-from src.fno_vmc.evaluate import evaluate_energy, evaluate_variance
+from src.fno_vmc_jax.util import load_config, set_logger
+from src.fno_vmc_jax.hamiltonian import make_hamiltonian
+from src.fno_vmc_jax.Ansatz import make_ansatz
+from src.fno_vmc_jax.evaluate import evaluate_energy, evaluate_variance
 
 
 def main():

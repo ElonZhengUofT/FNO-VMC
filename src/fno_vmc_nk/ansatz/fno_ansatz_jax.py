@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from .fno_jax import FNO2d
+from src.fno_vmc_nk.ansatz.fno_jax import FNO2d
 from flax import linen as nn
 
 class FNOAnsatzFlax(nn.Module):

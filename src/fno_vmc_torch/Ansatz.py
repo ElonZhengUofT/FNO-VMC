@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import torch.nn as nn
-from .fno_model import FNOAnsatz
-from .tn_model import TNAnsatz
+from src.fno_vmc_torch.fno_model import FNOAnsatz
+from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
 
 
 class BaseAnsatz(ABC, nn.Module):

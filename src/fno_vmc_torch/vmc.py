@@ -1,8 +1,7 @@
 import netket as nk
 import torch
-import numpy as np
 import jax
-from .torch_module import TorchModule
+from src.fno_vmc_torch.torch_module import TorchModule
 
 
 def random_init(rng_key, n_chains):
