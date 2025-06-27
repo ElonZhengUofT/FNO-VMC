@@ -39,7 +39,7 @@ class VMCTrainer:
             # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr)
             precond = nk.optimizer.SR(diag_shift=float(
-                vmc_params.get("diagshift", 0.01)))
+                vmc_params.get("diagshift", 1e-4)))
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
