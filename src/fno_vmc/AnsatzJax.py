@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import flax.linen as nn
 from .fno_ansatz_jax import FNOAnsatzFlax
 from .tn_model import TNAnsatz
-
+import netket as nk
 
 class BaseAnsatzJax(ABC):
     """Abstract base for variational ansatz for NetKet."""
@@ -31,5 +31,11 @@ def make_ansatz_jax(kind: str, dim: int, **kwargs) -> nn.Module:
     elif kind == "RBM":
         from netket.models import RBM
         return RBM(n_visible=dim, **kwargs)
+    elif kind == "Slater":
+        from netket.models import Slater
+        return Slater(**kwargs)
     else:
         raise ValueError(f"Unknown ansatz kind: {kind}")
+
+if __name__ == "__main__":
+    slater = nk.models.Slater2nd()
