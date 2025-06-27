@@ -16,7 +16,7 @@ import jax
 
 def main():
     parser = argparse.ArgumentParser(description="Train VMC with different ansatz and models")
-    parser.add_argument("--ansatz", choices=["fno", "tn"], required=True,
+    parser.add_argument("--ansatz", choices=["fno", "tn", "SlaterFNO", "RBM", "Slater"], required=True,
                         help="Type of variational ansatz to use: 'fno' or 'tn'.")
     parser.add_argument("--config", type=str, required=True,
                         help="Path to YAML config file.")
@@ -85,7 +85,7 @@ def main():
     # wandb.watch_callable(model)
 
     # train the model
-    model = nk.models.RBM() # A Test model, replace when debug is done
+    # model = nk.models.RBM() # A Test model, replace when debug is done
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
