@@ -79,8 +79,8 @@ class VMCTrainer:
 
             acceptance = float(loss.get("acceptance", np.nan))
             stats = loss["Energy"]
-            energy = float(stats.mean)  # e.g. 28.33
-            variance = float(stats.variance)  # e.g. 77.66
+            energy = float(stats.mean.real)  # e.g. 28.33
+            variance = float(stats.variance.real)  # e.g. 77.66
 
             print(f">>>> callback, step = {step}, "
                   f"energy = {energy:.4f}, variance = {variance:.4f}, "

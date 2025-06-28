@@ -13,7 +13,6 @@ class FNOAnsatzFlax(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        batch = x.shape[0]
         # reshape input to image grid
         batch, features = x.shape[0], x.shape[-1]
         if self.dim == 1:

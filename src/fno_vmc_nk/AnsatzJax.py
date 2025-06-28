@@ -16,7 +16,7 @@ class BaseAnsatzJax(ABC):
         pass
 
 
-def make_ansatz_jax(kind: str, dim: int, **kwargs) -> nn.Module:
+def make_ansatz_jax(kind: str, dim: int,hilbert, **kwargs) -> nn.Module:
     """
     Factory to create JAX/Flax ansatz for NetKet.
     Returns a flax.linen.Module with init and apply.
@@ -30,11 +30,9 @@ def make_ansatz_jax(kind: str, dim: int, **kwargs) -> nn.Module:
     elif kind == "tn":
         return TNAnsatz(dim=dim, **kwargs)
     elif kind == "rbm":
-        from netket.models import RBM
-        return RBM(n_visible=dim, **kwargs)
+        return nk.models.RBM(n_visible=dim, **kwargs)
     elif kind == "slater":
-        from netket.models import Slater
-        return Slater(**kwargs)
+        return nk.models.Slater2nd(hilbert=hilbert)
     elif kind == "slaterfno":
         return SlaterFNOFlax(dim=dim, **kwargs)
     else:

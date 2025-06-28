@@ -63,14 +63,15 @@ def main():
     # logging.info(f"Creating ansatz with params: {cfg.get('model_params')}")
 
     # build ansatz
-    rng = jax.random.PRNGKey(0)
+    # rng = jax.random.PRNGKey(0)
     model = make_ansatz_jax(
-        kind=args.ansatz,
+        kind=args.ansatz if args.ansatz != None else "fno",
         dim=cfg["hamiltonian"]["params"]["dim"],
+        hilbert=hilbert,
         **cfg.get("model_params", {})
     )
-    Lx = cfg["hamiltonian"]["params"]["L"]
-    Ly = cfg["hamiltonian"]["params"]["L"] if cfg["hamiltonian"]["params"]["dim"] == 2 else 1
+    # Lx = cfg["hamiltonian"]["params"]["L"]
+    # Ly = cfg["hamiltonian"]["params"]["L"] if cfg["hamiltonian"]["params"]["dim"] == 2 else 1
     # dummy_x = jnp.ones((1, Lx * Ly)) if cfg["hamiltonian"]["params"]["dim"] == 2 else jnp.ones((Lx * Ly, 1))
     # params = model.init(rng, dummy_x)
     # states = hilbert.random_state(jax.random.PRNGKey(42), 100)  # 100组随机自旋
