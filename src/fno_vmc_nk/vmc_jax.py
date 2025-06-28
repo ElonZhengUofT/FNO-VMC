@@ -68,12 +68,17 @@ class VMCTrainer:
         self.acceptance_list = []
         self.step_list = []
 
+        self.log_freq = int(vmc_params.get("log_freq", 50))
+
     def run(self, out='result', logfile=None):
         if logfile:
             import logging
             logging.getLogger().addHandler(logging.FileHandler(logfile))
 
         def _wandb_callback(step, loss, params):
+            if step % self.log_freq != 0:
+                return True
+
             print(f">>>> callback, step = {step}, energy = {loss.get('Energy')}")
             samples = self.vstate.samples
 
