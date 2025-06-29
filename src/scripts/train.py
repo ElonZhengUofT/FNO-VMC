@@ -89,8 +89,6 @@ def main():
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
-    trainer.run(out=os.path.join(args.outdir, args.ansatz),
-                logfile=args.logfile)
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
@@ -98,6 +96,7 @@ def main():
         vmc_params=cfg.get("vmc", {}),
         logger = wandb
     )
+    trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
 
 
 
