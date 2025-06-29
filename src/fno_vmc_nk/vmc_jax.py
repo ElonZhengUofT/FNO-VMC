@@ -33,11 +33,20 @@ class VMCTrainer:
 
         # 4) directly pass the optimizer to the VMC driver
         lr = float(vmc_params.get("lr", 1e-3))
+        decay_steps = 100
+        decay_rate = 0.95
 
         if vmc_params.get('sr', False):
             print(">>>>> VMCTrainer: Using SR optimizer")
             # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
-            opt = nk.optimizer.Adam(learning_rate=lr)
+            lr_schedule = optax.exponential_decay(
+                init_value=initial_lr,
+                transition_steps=decay_steps,
+                decay_rate=decay_rate,
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-4  # 可选：下限
+            )
+            opt = nk.optimizer.Adam(learning_rate=lr_schedule)
             precond = nk.optimizer.SR(diag_shift=float(
                 vmc_params.get("diagshift", 1e-3))) # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
@@ -68,7 +77,7 @@ class VMCTrainer:
         self.acceptance_list = []
         self.step_list = []
 
-        self.log_freq = int(vmc_params.get("log_freq", 1))
+        self.log_freq = int(vmc_params.get("log_freq", 20))
 
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
