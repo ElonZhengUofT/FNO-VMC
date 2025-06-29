@@ -65,7 +65,7 @@ class VMCTrainer:
             )
 
 
-        self.n_iter = vmc_params.get('n_iter', 200)
+        self.n_iter = vmc_params.get('n_iter', 2000)
 
         self.logger = logger
 
@@ -77,7 +77,7 @@ class VMCTrainer:
         self.acceptance_list = []
         self.step_list = []
 
-        self.log_freq = int(vmc_params.get("log_freq", 20))
+        self.log_freq = int(vmc_params.get("log_freq", 2))
 
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
