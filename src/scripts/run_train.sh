@@ -7,7 +7,7 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
   cd FNO-VMC
   git pull
   python -m src.scripts.train \
-    --ansatz Slater \
+    --ansatz fno \
     --config configs/two_dim_hubbard_fno_4.yaml \
     --outdir resul/fno_run \
     --logfile logs/fno_run.log
