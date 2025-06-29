@@ -97,11 +97,11 @@ def make_hamiltonian(ham_type: str, params: dict):
         def nc(site, sz):
             return nk.operator.fermion.number(hilbert, site, sz=sz)
 
-        for sz in (+1, -1):
+        for sz in (0, 1):
             for u, v in graph.edges():
                 op -= t_hop * (cdag(u, sz) * c(v, sz) + cdag(v, sz) * c(u, sz))
         for u in graph.nodes():
-            op += U * nc(u, +1) * nc(u, -1)
+            op += U * nc(u, 0) * nc(u, 1)
     else:
         raise ValueError(f"Unknown Hamiltonian type: {ham_type}")
 
