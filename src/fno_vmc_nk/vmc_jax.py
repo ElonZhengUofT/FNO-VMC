@@ -126,8 +126,6 @@ class VMCTrainer:
 
         print(">>>>> VMCTrainer.run() 开始执行 —— out =", out)
         print(f">>>>> VMCTrainer.run()：self.n_iter = {self.n_iter}")
-
-        splits = total_chains // chains_per_split
         self.driver.run(
             self.n_iter,
             out=out,
