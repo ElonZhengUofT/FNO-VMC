@@ -14,7 +14,7 @@ class VMCTrainer:
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains=128,
-            n_sweeps=1
+            n_sweeps=2
         )
 
         print("Hamiltonian:", hamiltonian)
@@ -39,7 +39,7 @@ class VMCTrainer:
             # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr)
             precond = nk.optimizer.SR(diag_shift=float(
-                vmc_params.get("diagshift", 1e-2))) # 1e-4 is a common default value
+                vmc_params.get("diagshift", 1e-4))) # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
@@ -68,7 +68,10 @@ class VMCTrainer:
         self.acceptance_list = []
         self.step_list = []
 
-        self.log_freq = int(vmc_params.get("log_freq", 50))
+        self.log_freq = int(vmc_params.get("log_freq", 1))
+
+        #         self._switch_at = int(vmc_params.get("switch_at", 150))
+        #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
     def run(self, out='result', logfile=None):
         if logfile:
@@ -76,6 +79,12 @@ class VMCTrainer:
             logging.getLogger().addHandler(logging.FileHandler(logfile))
 
         def _wandb_callback(step, loss, params):
+            #             if step == self._switch_at:
+            #                 print(f"==> Step {step}: 增大 SR diagshift 到 {self._new_diag}")
+            #                 self.driver.preconditioner = nk.optimizer.SR(
+            #                     diag_shift=self._new_diag
+            #                 )
+
             if step % self.log_freq != 0:
                 return True
 
