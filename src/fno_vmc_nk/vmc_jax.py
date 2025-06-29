@@ -40,7 +40,7 @@ class VMCTrainer:
             print(">>>>> VMCTrainer: Using SR optimizer")
             # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             lr_schedule = optax.exponential_decay(
-                init_value=initial_lr,
+                init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
