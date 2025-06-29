@@ -99,7 +99,7 @@ def make_hamiltonian(ham_type: str, params: dict):
 
         for sz in (+1, -1):
             for u, v in graph.edges():
-                op += t_hop * (cdag(u, sz) * c(v, sz) + cdag(v, sz) * c(u, sz))
+                op -= t_hop * (cdag(u, sz) * c(v, sz) + cdag(v, sz) * c(u, sz))
         for u in graph.nodes():
             op += U * nc(u, +1) * nc(u, -1)
     else:
