@@ -13,6 +13,8 @@ from src.fno_vmc_nk.vmc_jax import VMCTrainer
 import jax.numpy as jnp
 import jax
 
+XLA_FLAGS="--xla_gpu_autotune_level=2"
+
 
 def main():
     parser = argparse.ArgumentParser(description="Train VMC with different ansatz and models")
