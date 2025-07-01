@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 import wandb
 
-ENERGY_MIN, ENERGY_MAX = -100000, 100000
+ENERGY_MIN, ENERGY_MAX = -1e10, 1e12
 
 class VMCTrainer:
     def __init__(self, hilbert, graph, hamiltonian, ansatz_model, vmc_params, logger=None):
