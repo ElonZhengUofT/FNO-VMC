@@ -13,7 +13,7 @@ class VMCTrainer:
         # 1) prepare sampler
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
-            n_chains=128,
+            n_chains=64,
             n_sweeps=2
         )
 

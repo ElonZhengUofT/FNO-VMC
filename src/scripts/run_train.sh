@@ -6,7 +6,7 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
   cd Projects
   cd FNO-VMC
   git pull
-  export XLA_FLAGS="--xla_gpu_autotune_level=2"
+  #export XLA_FLAGS="--xla_gpu_autotune_level=2"
   python -m src.scripts.train \
     --ansatz Slater \
     --config configs/two_dim_hubbard_fno_4.yaml \
