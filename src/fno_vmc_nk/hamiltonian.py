@@ -97,7 +97,7 @@ def make_hamiltonian(ham_type: str, params: dict):
         def nc(site, sz):
             return nk.operator.fermion.number(hilbert, site, sz=sz)
 
-        for sz in (+1, -1):
+        for sz in (-1, +1):
             for u, v in graph.edges():
                 op -= t_hop * (cdag(u, sz) * c(v, sz) + cdag(v, sz) * c(u, sz))
         for u in graph.nodes():
