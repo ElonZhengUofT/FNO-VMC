@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import flax.linen as nn
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
-from src.fno_vmc_nk.ansatz.SlaterFNO import SlaterFNOFlax
+from src.fno_vmc_nk.ansatz.SlaterFNO import SlaterFNOFlax, SlaterDetFlax
 import netket as nk
 
 class BaseAnsatzJax(ABC):
@@ -32,7 +32,7 @@ def make_ansatz_jax(kind: str, dim: int,hilbert, **kwargs) -> nn.Module:
     elif kind == "rbm":
         return nk.models.RBM(n_visible=dim, **kwargs)
     elif kind == "slater":
-        return nk.models.Slater2nd(hilbert=hilbert,generalized=True)
+        return SlaterDetFlax(hilbert=hilbert)
     elif kind == "slaterfno":
         return SlaterFNOFlax(dim=dim, **kwargs)
     else:
