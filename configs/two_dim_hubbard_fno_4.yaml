@@ -9,7 +9,7 @@ hamiltonian:
     t: 1.0               # Jumping term
     pbc: True            # Periodic boundary conditions
     # for half-filling with Sz_total=0, take N_up = N_down = L*L/2
-    n_particles: [7, 7]  # Number of particles [N_up, N_down]
+    n_particles: [8, 8]  # Number of particles [N_up, N_down]
 
 model_params:
   # FNO ansatz 的超参数
