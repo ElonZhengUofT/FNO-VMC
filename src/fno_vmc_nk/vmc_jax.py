@@ -11,7 +11,7 @@ ENERGY_MIN, ENERGY_MAX = -100000, 100000
 class VMCTrainer:
     def __init__(self, hilbert, graph, hamiltonian, ansatz_model, vmc_params, logger=None):
         # 1) prepare sampler
-        if isinstance(hilbert, nk.hilbert.Spin):
+        if isinstance(hilbert, nk.hilbert.Spin) or True:
             sampler = nk.sampler.MetropolisLocal(
                 hilbert,
                 n_chains=128,
