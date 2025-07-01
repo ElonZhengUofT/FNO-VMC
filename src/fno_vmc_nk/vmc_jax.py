@@ -9,7 +9,7 @@ import wandb
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 class VMCTrainer:
-    def __init__(self, hilbert,graph, hamiltonian, ansatz_model, vmc_params, logger=None):
+    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None):
         # 1) prepare sampler
         sampler = nk.sampler.MetropolisLocal(
             hilbert,

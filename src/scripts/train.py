@@ -56,7 +56,7 @@ def main():
     wandb.log_artifact(artifact)
 
     # build Hamiltonian
-    hilbert, hamiltonian, graph = make_hamiltonian(
+    hilbert, hamiltonian = make_hamiltonian(
         ham_type=cfg["hamiltonian"]["type"],
         params=cfg["hamiltonian"]["params"]
     )
@@ -91,7 +91,6 @@ def main():
     # model = nk.models.RBM() # A Test model, replace when debug is done
     trainer = VMCTrainer(
         hilbert=hilbert,
-        graph=graph,
         hamiltonian=hamiltonian,
         ansatz_model= model,
         vmc_params=cfg.get("vmc", {}),
