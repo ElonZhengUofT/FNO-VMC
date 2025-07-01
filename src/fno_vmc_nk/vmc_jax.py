@@ -154,16 +154,14 @@ class VMCTrainer:
         print(f"\n=== Inference estimate: {n_blocks} blocks, ")
 
         # 重置采样状态
-        self.vstate.reset()
         block_means = []
 
         for i in range(n_blocks):
             # 每个 block：先丢弃 burn_in，再采 block_size 个样本
-            stats, _grad = self.vstate.expect_and_grad(
-                self.hamiltonian,
-                n_samples=block_size,
-                n_discard_per_chain=burn_in
-            )
+            self.vstate.n_discard_per_chain = burn_in
+            self.vstate.n_samples = block_size
+            self.vstate.reset()
+            stats = self.vstate.expect(self.hamiltonian)
             m = float(stats.mean.real)
             block_means.append(m)
             if log:

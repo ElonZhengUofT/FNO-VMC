@@ -3,6 +3,7 @@ import flax.linen as nn
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
 from src.fno_vmc_nk.ansatz.SlaterFNO import SlaterFNOFlax, SlaterDetFlax
+from src.fno_vmc_nk.ansatz.BackflowFNO import NNBackflowSlater2nd
 import netket as nk
 
 class BaseAnsatzJax(ABC):
@@ -35,6 +36,8 @@ def make_ansatz_jax(kind: str, dim: int,hilbert, **kwargs) -> nn.Module:
         return nk.models.Slater2nd(hilbert=hilbert, generalized=True, restricted=True)
     elif kind == "slaterfno":
         return SlaterFNOFlax(dim=dim, **kwargs)
+    elif kind == "backflow":
+        return NNBackflowSlater2nd(hilbert=hilbert)
     else:
         raise ValueError(f"Unknown ansatz kind: {kind}")
 

@@ -19,7 +19,7 @@ XLA_FLAGS="--xla_gpu_autotune_level=2"
 
 def main():
     parser = argparse.ArgumentParser(description="Train VMC with different ansatz and models")
-    parser.add_argument("--ansatz", choices=["fno", "tn", "SlaterFNO", "RBM", "Slater"], required=True,
+    parser.add_argument("--ansatz", choices=["fno", "tn", "SlaterFNO", "RBM", "Slater", "backflow"], required=True,
                         help="Type of variational ansatz to use: 'fno' or 'tn'.")
     parser.add_argument("--config", type=str, required=True,
                         help="Path to YAML config file.")
@@ -99,6 +99,7 @@ def main():
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
     trainer.estimate()
+    print("Training finished.")
 
 
 
