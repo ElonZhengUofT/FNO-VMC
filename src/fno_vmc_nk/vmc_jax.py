@@ -48,7 +48,7 @@ class VMCTrainer:
             )
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
             precond = nk.optimizer.SR(diag_shift=float(
-                vmc_params.get("diagshift", 1e-4))) # 1e-4 is a common default value
+                vmc_params.get("diagshift", 1e-3))) # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
