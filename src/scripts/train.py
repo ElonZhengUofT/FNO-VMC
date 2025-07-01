@@ -98,6 +98,7 @@ def main():
         logger = wandb
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
+    trainer.estimate()
 
 
 
