@@ -5,36 +5,61 @@ import flax.linen as nn
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 import netket as nk
 
+import flax.linen as nn
+import jax.numpy as jnp
+from netket.hilbert import SpinOrbitalFermions
+from netket.utils.types import DType
+from netket.nn.masked_linear import default_kernel_init
+
 
 class SlaterDetFlax(nn.Module):
     """
-    Flax Module for Slater determinant with dynamic dimensions inferred from input.
+    Flax Module for Slater determinant with dynamic dimensions inferred from hilbert.
+
+    Attributes:
+      hilbert: 一个 SpinOrbitalFermions 实例，包含粒子数、轨道数等信息。
     """
-    dim: int  # 1D or 2D
-    channel: int = 2  # number of orbitals per site (for Fermi systems, typically 2 for spin-up and spin-down)
+    hilbert: SpinOrbitalFermions
+    dtype: DType = jnp.float32
 
-    @nn.compact
-    def __call__(self, s: jnp.ndarray) -> jnp.ndarray:
-        batch, n_site = s.shape
+    def setup(self):
+        # 从 hilbert 属性中读取需要的维度
+        n_sites = self.hilbert.size  # 基于格点数
+        n_orbitals = self.hilbert.n_orbitals  # 轨道数
 
-        is_up = jnp.logical_or(s == 1, s == 3)  # spin-up 占据位置
-        is_down = jnp.logical_or(s == 2, s == 3)  # spin-down 占据位置
-
-        n_up = int(jnp.sum(is_up).item())
-        n_down = int(jnp.sum(is_down).item())
-        n_particles = n_up + n_down
-
-        # initialize embedding table of shape (n_sites, n_particles)
-        embedding = self.param(
-            'embedding',
-            nn.initializers.lecun_normal(),
-            (n_sites, n_particles)
+        # 定义一个 DenseGeneral，用于把输入映射到 Slater 矩阵
+        # 输出维度为 [batch, n_sites, n_orbitals]
+        self.orbital_layer = nn.DenseGeneral(
+            features=(n_orbitals,),
+            axis=-1,
+            dtype=self.dtype,
+            kernel_init=default_kernel_init
         )
-        # gather orbital values -> shape (batch, n_particles, n_particles)
-        M = embedding[s]
 
-        # compute determinant for each sample
-        return jnp.linalg.det(M)
+    def __call__(self, config):
+        """
+        参数:
+          config: shape [batch, n_sites] 的 0/1 占据数组
+        返回:
+          logψ: 波函数的对数幅度
+          sign: 波函数的符号
+        """
+        # 1. 通过全连接层构造 Slater 矩阵
+        #    先把 config 变成 [batch, n_sites, 1]，再映射到 [batch, n_sites, n_orbitals]
+        x = config[..., None]
+        slater_matrix = self.orbital_layer(x)
+
+        # 2. 批量计算行列式的符号和对数
+        #    这里用 jnp.linalg.slogdet
+        def _slogdet(matrix):
+            sign, logdet = jnp.linalg.slogdet(matrix)
+            return sign, logdet
+
+        # map over batch 维度
+        signs, logdets = jax.vmap(_slogdet)(slater_matrix)
+
+        return logdets, signs
+
 
 class SlaterFNOFlax(nn.Module):
     """
