@@ -84,7 +84,7 @@ def make_hamiltonian(ham_type: str, params: dict):
         edges = generate_j2_edges(L, pbc=pbc)
         op = nk.operator.J1J2Heisenberg(hilbert, J1=J1, J2=J2, edges=edges)
     elif t == "hubbard":
-        U = params.get("U", 4.0)
+        U = params.get("U", 8.0)
         t_hop = params.get("t", 1.0)
         op = 0.0
 
@@ -97,11 +97,11 @@ def make_hamiltonian(ham_type: str, params: dict):
         def nc(site, sz):
             return nk.operator.fermion.number(hilbert, site, sz=sz)
 
-        for sz in (0, 1):
+        for sz in (+1, -1):
             for u, v in graph.edges():
                 op -= t_hop * (cdag(u, sz) * c(v, sz) + cdag(v, sz) * c(u, sz))
         for u in graph.nodes():
-            op += U * nc(u, 0) * nc(u, 1)
+            op += U * nc(u, +1) * nc(u, -1)
     else:
         raise ValueError(f"Unknown Hamiltonian type: {ham_type}")
 
