@@ -59,9 +59,10 @@ class SlaterDetFlax(nn.Module):
         slater_mats = jax.vmap(build_slater, in_axes=(0, 0))(orb_mat, config)
 
         signs, logdets = jax.vmap(lambda M: jnp.linalg.slogdet(M))(slater_mats)
-        psi = signs * jnp.exp(logdets)
+        phase   = jnp.where(signs > 0, 0.0, jnp.pi)
+        log_psi = logdets + 1j * phase
 
-        return psi.astype(self.dtype)
+        return log_psi
 
 
 class SlaterFNOFlax(nn.Module):
