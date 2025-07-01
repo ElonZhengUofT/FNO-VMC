@@ -12,6 +12,7 @@ from src.fno_vmc_nk.AnsatzJax import make_ansatz_jax
 from src.fno_vmc_nk.vmc_jax import VMCTrainer
 import jax.numpy as jnp
 import jax
+import time
 
 XLA_FLAGS="--xla_gpu_autotune_level=2"
 
@@ -97,6 +98,7 @@ def main():
         logger = wandb
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
+    trainer.estimate(
 
 
 

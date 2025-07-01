@@ -16,12 +16,16 @@ class VMCTrainer:
             n_chains=64,
             n_sweeps=2
         )
+        self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
+        self.local_energy_fn = nk.vqs.local_value(hamiltonian)
 
         print("Hamiltonian:", hamiltonian)
+        self.sampler = sampler
 
-        # 2) wrap the PyTorch model with TorchModule
-
+        # 2) wrap the PyTorch model
         machine = ansatz_model
+        self.machine = machine
+        self.params = machine.parameters
 
         # 3) prepare the MCState
         self.vstate = nk.vqs.MCState(
@@ -132,3 +136,42 @@ class VMCTrainer:
         )
 
         print(">>>>> VMCTrainer.run() 执行结束")
+
+    def estimate(self, n_block, block_size, burn_in: int=1000, log: bool=True):
+        """
+        Estimate the energy and variance of the current state.
+        - `n_block`: Number of blocks to average over.
+        - `block_size`: Size of each block.
+        - burn_in: Number of initial samples to discard.
+
+        """
+        energies = []
+        for i in range(n_blocks):
+            # Burn-in phase
+            self._key, subkey = jax.random.split(self._key)
+            self.sampler.run(subkey, n_steps=burn_in, params=self.params)
+
+            # Collect samples
+            self._key, subkey = jax.random.split(self._key)
+            samples = self.sampler.run(subkey, n_steps=block_size,
+                                       params=self.params)
+
+            # Estimate energy and variance
+            e_loc = self.local_energy_fn(self.params, samples)
+            energies.append(e_loc)
+
+            if log:
+                print(f"[Estimate] block {i + 1}/{n_blocks} done.")
+
+            all_e = jnp.concatenate(energies)
+            mean_e = jnp.mean(all_e).item()
+            stderr = (jnp.std(all_e) / jnp.sqrt(all_e.shape[0])).item()
+            print(
+                f"\n=== Inference estimate: ⟨E⟩ = {mean_e:.6f} ± {stderr:.6f} ===")
+
+            if self.logger is not None:
+                self.logger.log({
+                    "estimate/energy": mean_e,
+                    "estimate/variance": stderr
+                })
+            return mean_e, stderr
