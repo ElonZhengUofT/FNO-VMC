@@ -33,8 +33,8 @@ class VMCTrainer:
 
         # 4) directly pass the optimizer to the VMC driver
         lr = float(vmc_params.get("lr", 1e-3))
-        decay_steps = 20
-        decay_rate = 0.3
+        decay_steps = 100
+        decay_rate = 0.95
 
         if vmc_params.get('sr', False):
             print(">>>>> VMCTrainer: Using SR optimizer")
