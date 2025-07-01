@@ -32,7 +32,7 @@ def make_ansatz_jax(kind: str, dim: int,hilbert, **kwargs) -> nn.Module:
     elif kind == "rbm":
         return nk.models.RBM(n_visible=dim, **kwargs)
     elif kind == "slater":
-        return nk.models.Slater2nd(hilbert=hilbert, generalized=True)
+        return nk.models.Slater2nd(hilbert=hilbert, generalized=True, restricted=True)
     elif kind == "slaterfno":
         return SlaterFNOFlax(dim=dim, **kwargs)
     else:
