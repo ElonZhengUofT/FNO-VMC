@@ -109,8 +109,7 @@ class VMCTrainer:
                   f"energy = {energy:.4f}, variance = {variance:.4f}, "
                   f"acceptance = {acceptance:.4f}")
 
-            if energy < ENERGY_MIN or energy > ENERGY_MAX:
-                energy = np.nan
+            # if energy < ENERGY_MIN or energy > ENERGY_MAX:energy = np.nan
 
             if self.logger is not None:
                 # Log the things you want to track
