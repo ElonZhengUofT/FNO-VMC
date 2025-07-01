@@ -98,8 +98,6 @@ def main():
         logger = wandb
     )
     trainer.run(out=os.path.join(args.outdir, args.ansatz), logfile=args.logfile)
-    trainer.estimate(n_block=cfg.get("vmc", {}).get("n_block", 10),
-                     block_size=cfg.get("vmc", {}).get("block_size", 10))
 
 
 

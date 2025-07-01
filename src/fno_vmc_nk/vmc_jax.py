@@ -17,7 +17,6 @@ class VMCTrainer:
             n_sweeps=2
         )
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
-        self.local_energy_fn = nk.vqs.local_value(hamiltonian)
 
         print("Hamiltonian:", hamiltonian)
         self.sampler = sampler
@@ -25,7 +24,6 @@ class VMCTrainer:
         # 2) wrap the PyTorch model
         machine = ansatz_model
         self.machine = machine
-        self.params = machine.parameters
 
         # 3) prepare the MCState
         self.vstate = nk.vqs.MCState(
@@ -113,7 +111,8 @@ class VMCTrainer:
                   f"energy = {energy:.4f}, variance = {variance:.4f}, "
                   f"acceptance = {acceptance:.4f}")
 
-            # if energy < ENERGY_MIN or energy > ENERGY_MAX:energy = np.nan
+            if energy < ENERGY_MIN or energy > ENERGY_MAX:
+                energy = np.nan
 
             if self.logger is not None:
                 # Log the things you want to track
@@ -137,41 +136,52 @@ class VMCTrainer:
 
         print(">>>>> VMCTrainer.run() 执行结束")
 
-    def estimate(self, n_block, block_size, burn_in: int=1000, log: bool=True):
+    def estimate(
+            self,
+            n_blocks: int = 50,
+            block_size: int = 2000,
+            burn_in: int = 1000,
+            log: bool = True
+    ):
         """
-        Estimate the energy and variance of the current state.
-        - `n_block`: Number of blocks to average over.
-        - `block_size`: Size of each block.
-        - burn_in: Number of initial samples to discard.
+        冻结模型参数后，分块运行 MCMC 并对局部能量做时间平均：
+        - n_blocks: 分块次数
+        - block_size: 每块正式采样的 MCMC 步数
+        - burn_in: 每块前的热身步数（丢弃）
+        - log: 是否打印每块的均值
+        """
+        import numpy as _np
 
-        """
-        energies = []
+        # 重置采样状态
+        self.vstate.reset()
+        block_means = []
+
         for i in range(n_blocks):
-            # Burn-in phase
-            self._key, subkey = jax.random.split(self._key)
-            self.sampler.run(subkey, n_steps=burn_in, params=self.params)
-
-            # Collect samples
-            self._key, subkey = jax.random.split(self._key)
-            samples = self.sampler.run(subkey, n_steps=block_size,
-                                       params=self.params)
-
-            # Estimate energy and variance
-            e_loc = self.local_energy_fn(self.params, samples)
-            energies.append(e_loc)
-
+            # 每个 block：先丢弃 burn_in，再采 block_size 个样本
+            stats, _grad = self.vstate.expect_and_grad(
+                self.hamiltonian,
+                n_samples=block_size,
+                n_discard_per_chain=burn_in
+            )
+            m = float(stats.mean.real)
+            block_means.append(m)
             if log:
-                print(f"[Estimate] block {i + 1}/{n_blocks} done.")
+                print(f"[Estimate] block {i + 1}/{n_blocks} mean = {m:.6f}")
 
-            all_e = jnp.concatenate(energies)
-            mean_e = jnp.mean(all_e).item()
-            stderr = (jnp.std(all_e) / jnp.sqrt(all_e.shape[0])).item()
-            print(
-                f"\n=== Inference estimate: ⟨E⟩ = {mean_e:.6f} ± {stderr:.6f} ===")
+        # 计算总体均值和标准误
+        bm = _np.array(block_means)
+        mean_e = float(bm.mean())
+        stderr = float(bm.std(ddof=1) / _np.sqrt(len(bm)))
 
-            if self.logger is not None:
-                self.logger.log({
-                    "estimate/energy": mean_e,
-                    "estimate/variance": stderr
-                })
-            return mean_e, stderr
+        print(
+            f"\n=== Inference estimate: ⟨E⟩ = {mean_e:.6f} ± {stderr:.6f} ===")
+
+        # 如果使用了 WandB，顺便记录
+        if self.logger is not None:
+            self.logger.log({
+                "inference/energy_mean": mean_e,
+                "inference/energy_stderr": stderr
+            })
+
+        return mean_e, stderr
+
