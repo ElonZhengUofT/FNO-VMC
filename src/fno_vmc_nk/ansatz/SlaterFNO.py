@@ -31,11 +31,12 @@ class SlaterDetFlax(nn.Module):
 
         # 定义一个 DenseGeneral，用于把输入映射到 Slater 矩阵
         # 输出维度为 [batch, n_sites, n_orbitals]
-        self.orbital_layer = nn.DenseGeneral(
-            features=(n_particles,),
-            axis=-1,
-            dtype=self.dtype,
-            kernel_init=default_kernel_init
+        self.orbital_layer = self.param(
+            "orbitals",
+            # Xavier 初始化更稳定
+            nn.initializers.variance_scaling(1.0, "fan_avg", "truncated_normal"),
+            (n_sites, n_particles),
+            self.dtype,
         )
 
     def __call__(self, config):

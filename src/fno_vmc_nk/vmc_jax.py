@@ -9,13 +9,22 @@ import wandb
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 class VMCTrainer:
-    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None):
+    def __init__(self, hilbert, graph, hamiltonian, ansatz_model, vmc_params, logger=None):
         # 1) prepare sampler
-        sampler = nk.sampler.MetropolisLocal(
-            hilbert,
-            n_chains=128,
-            n_sweeps=2
-        )
+        if isinstance(hilbert, nk.hilbert.Spin):
+            sampler = nk.sampler.MetropolisLocal(
+                hilbert,
+                n_chains=128,
+                n_sweeps=1
+            )
+        else:
+            sampler = nk.sampler.MetropolisFermionHop(
+                hilbert,
+                graph=graph,
+                spin_symmetric=True,
+                sweep_size=64
+            )
+
 
         print("Hamiltonian:", hamiltonian)
 

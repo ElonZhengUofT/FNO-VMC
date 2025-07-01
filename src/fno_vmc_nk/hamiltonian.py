@@ -105,7 +105,7 @@ def make_hamiltonian(ham_type: str, params: dict):
     else:
         raise ValueError(f"Unknown Hamiltonian type: {ham_type}")
 
-    return hilbert, op
+    return hilbert, op, graph
 
 if __name__ == "__main__":
     # Example usage
