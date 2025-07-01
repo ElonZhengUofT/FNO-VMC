@@ -151,6 +151,7 @@ class VMCTrainer:
         - log: 是否打印每块的均值
         """
         import numpy as _np
+        print(f"\n=== Inference estimate: {n_blocks} blocks, ")
 
         # 重置采样状态
         self.vstate.reset()
@@ -182,6 +183,7 @@ class VMCTrainer:
                 "inference/energy_mean": mean_e,
                 "inference/energy_stderr": stderr
             })
+        print(">>>>> VMCTrainer.estimate() 执行结束")
 
         return mean_e, stderr
 
