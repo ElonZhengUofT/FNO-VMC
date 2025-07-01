@@ -14,7 +14,7 @@ class VMCTrainer:
         if isinstance(hilbert, nk.hilbert.Spin) or True:
             sampler = nk.sampler.MetropolisLocal(
                 hilbert,
-                n_chains=128,
+                n_chains=64,
                 n_sweeps=2
             )
         else:
