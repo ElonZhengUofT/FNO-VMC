@@ -44,7 +44,7 @@ class VMCTrainer:
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
-                end_value=1e-5  # 可选：下限
+                end_value=1e-4  # 可选：下限
             )
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
             precond = nk.optimizer.SR(diag_shift=float(
