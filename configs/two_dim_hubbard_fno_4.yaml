@@ -5,7 +5,7 @@ hamiltonian:
   params:
     L: 4                # Lattice size (Lx = Ly)
     dim: 2               # dimension of the system
-    U: 4.0               # Coulomb interaction strength
+    U: 2.0               # Coulomb interaction strength
     t: 1.0               # Jumping term
     pbc: True            # Periodic boundary conditions
     # for half-filling with Sz_total=0, take N_up = N_down = L*L/2
