@@ -16,7 +16,6 @@ model_params:
   modes1: 4           # Number of Fourier modes in x direction (≤ L)
   modes2: 3           # Number of Fourier modes in y direction (≤ L)
   width: 128           # Hidden layer width (number of channels)
-  depth: 8
   channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
 
 vmc:
