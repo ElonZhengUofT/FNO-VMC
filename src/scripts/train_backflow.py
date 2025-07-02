@@ -9,6 +9,7 @@ from src.fno_vmc_nk.util import load_config, set_logger
 from src.fno_vmc_nk.hamiltonian import make_hamiltonian
 # from src.fno_vmc_nk.Ansatz import make_ansatz
 from src.fno_vmc_nk.AnsatzJax import make_ansatz_jax
+from src.fno_vmc_nk.ansatz.BackflowFNO import NNBackflowSlater2nd
 from src.fno_vmc_nk.vmc_jax import VMCTrainer
 import jax.numpy as jnp
 import jax
@@ -44,23 +45,8 @@ def main():
     # load configuration
     cfg = load_config(args.config)
 
-    # initialize Weights & Biases
-    wandb.login(key="9648574da18d2bf024ef72f8f5b196d410e674d4")
-    wandb.init(
-        project = args.wandb_project,
-        config = cfg,
-        name = f"{args.ansatz}-{os.path.basename(args.config)}"
-    )
-    wandb.watch_callable = lambda m: wandb.watch(m, log="all", log_freq=50)
-
-    wandb.config.update(cfg, allow_val_change=True)
-
-    artifact = wandb.Artifact(f"{args.ansatz}_config", type="config")
-    artifact.add_file(args.config)
-    wandb.log_artifact(artifact)
-
     # build Hamiltonian
-    hilbert, hamiltonian, graph = make_hamiltonian(
+    hilbert, hamiltonian,graph = make_hamiltonian(
         ham_type=cfg["hamiltonian"]["type"],
         params=cfg["hamiltonian"]["params"]
     )
@@ -93,39 +79,33 @@ def main():
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
-    print("=== Stage 1: training only Slater parameters ===")
-    pre_trainer = VMCTrainer(
-        hilbert=hilbert,
-        hamiltonian=hamiltonian,
-        ansatz_model=model,
-        phase=1,  # 指定为第一阶段
-        vmc_params={**cfg.get("vmc", {})},
-        logger=wandb,
+    hi = hilbert
+    model = NNBackflowSlater2nd(
+        hilbert=hi, generalized=False, restricted=True, hidden_units=128
     )
-    pre_trainer.run(out=os.path.join(args.outdir, "phase1"),
-                 logfile=args.logfile)
+    rng = jax.random.PRNGKey(0)
+    dummy_n = jnp.zeros((hi.size,), dtype=jnp.int32)
+    variables = model.init(rng, dummy_n)
 
-    print("=== Stage 2: training only Backflow MLP ===")
-    trainer = VMCTrainer(
-        hilbert=hilbert,
-        hamiltonian=hamiltonian,
-        ansatz_model=pre_trainer.vstate.model,  # 使用阶段一结束时的参数
-        phase=2,  # 指定为第二阶段
-        vmc_params={**cfg.get("vmc", {})},
-        logger=wandb,
-    )
-    trainer.run(out=os.path.join(args.outdir, "phase2"),
-                 logfile=args.logfile)
-    trainer.estimate()
-    print("Training finished.")
+    # variables 是一个 FrozenDict，结构大概是 {"params": { … }}
+    params = variables["params"]
 
-    trainer = VMCTrainer(
-        hilbert=hilbert,
-        hamiltonian=hamiltonian,
-        ansatz_model= model,
-        vmc_params=cfg.get("vmc", {}),
-        logger = wandb
-    )
+    # 递归打印各层级的 key 路径
+    def print_tree(d, prefix=()):
+        if isinstance(d, dict):
+            for k, v in d.items():
+                print(" / ".join(prefix + (k,)))
+                print_tree(v, prefix + (k,))
+        else:
+            # 叶子节点，打印形状
+            try:
+                print(
+                    f"{' / '.join(prefix)} : shape={v.shape}, dtype={v.dtype}"
+                )
+            except:
+                pass
+
+    print_tree(params)
 
 
 

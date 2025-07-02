@@ -1,15 +1,27 @@
 import netket as nk
 import numpy as np
+import jax.numpy as jnp
 import jax
 import optax
 import matplotlib.pyplot as plt
 import os
 import wandb
+import optax
+import flax
+from flax.core.frozen_dict import freeze, unfreeze
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
+def label_fn(path, _):
+    return "slater" if path[0] == "slater" else "backflow"
+
+
+#region VMCTrainer Class
 class VMCTrainer:
-    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None):
+    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None):
+        """
+        VMCTrainer Initialization
+        """
         # 1) prepare sampler
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
@@ -23,6 +35,15 @@ class VMCTrainer:
 
         # 2) wrap the PyTorch model
         machine = ansatz_model
+
+        rngs = {"params": self._key}
+        params = machine.init(rngs, jnp.zeros((hilbert.size,)))["params"]
+
+        param_labels = flax.traverse_util.path_aware_map(
+            lambda path, _: label_fn(path, _),
+            params,
+        )
+
         self.machine = machine
 
         # 3) prepare the MCState
@@ -34,13 +55,11 @@ class VMCTrainer:
         )
 
         # 4) directly pass the optimizer to the VMC driver
-        lr = float(vmc_params.get("lr", 1e-3))
         decay_steps = 100
         decay_rate = 0.95
 
-        if vmc_params.get('sr', False):
-            print(">>>>> VMCTrainer: Using SR optimizer")
-            # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
+        if phase == 1:
+            lr = float(vmc_params.get("lr_slater", 1e-2))
             lr_schedule = optax.exponential_decay(
                 init_value=lr,
                 transition_steps=decay_steps,
@@ -48,9 +67,46 @@ class VMCTrainer:
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-4  # 可选：下限
             )
+            slater_opt = optax.adam(learning_rate=lr_schedule)
+            transform = optax.multi_transform(
+                {"slater": slater_opt,
+                 "backflow": optax.set_to_zero()},
+                param_labels,
+            )
+            opt = transform
+            print(">>> Phase 1 optimizer: only SLATER")
+        elif phase == 2:
+            lr = float(vmc_params.get("lr", 5e-3))
+            lr_schedule = optax.exponential_decay(
+                init_value=lr,
+                transition_steps=decay_steps,
+                decay_rate=decay_rate,
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-4  # 可选：下限
+            )
+            backflow_opt = optax.adam(learning_rate=lr_schedule)
+            transform = optax.multi_transform(
+                {"slater": optax.set_to_zero(),
+                 "backflow": backflow_opt},
+                param_labels,
+            )
+            opt = transform
+            print(">>> Phase 2 optimizer: only BACKFLOW")
+        else:
+            lr = float(vmc_params.get("lr", 5e-3))
+            lr_schedule = optax.exponential_decay(
+                init_value=lr,
+                transition_steps=decay_steps,
+                decay_rate=decay_rate,
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-4  # 可选：下限
+            )
+                # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
-            precond = nk.optimizer.SR(diag_shift=float(
-                vmc_params.get("diagshift", 1e-5))) # 1e-4 is a common default value
+
+        if vmc_params.get('sr', False):
+            precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
+                           1e-5)))  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
@@ -58,14 +114,11 @@ class VMCTrainer:
                 preconditioner=precond,
             )
         else:
-            print(">>>>> VMCTrainer: Using Adam optimizer")
-            opt = nk.optimizer.Adam(learning_rate=lr)
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
                 variational_state=self.vstate,
             )
-
 
         self.n_iter = vmc_params.get('n_iter', 2000)
 
@@ -84,6 +137,7 @@ class VMCTrainer:
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
+    # region Run Method
     def run(self, out='result', logfile=None):
         if logfile:
             import logging
@@ -135,7 +189,9 @@ class VMCTrainer:
         )
 
         print(">>>>> VMCTrainer.run() 执行结束")
+        #endregion
 
+    # region Estimate Method
     def estimate(
             self,
             n_blocks: int = 50,
@@ -184,4 +240,6 @@ class VMCTrainer:
         print(">>>>> VMCTrainer.estimate() 执行结束")
 
         return mean_e, stderr
+    #endregion
+#endregion
 
