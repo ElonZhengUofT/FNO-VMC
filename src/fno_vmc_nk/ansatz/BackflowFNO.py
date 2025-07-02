@@ -8,6 +8,7 @@ from netket.experimental.models import Slater2nd
 from netket.nn.masked_linear import default_kernel_init
 from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
+from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 
 class NNBackflowSlater2nd(nn.Module):
     """
@@ -20,6 +21,11 @@ class NNBackflowSlater2nd(nn.Module):
     hidden_units: int = 64
     kernel_init: NNInitFunc = default_kernel_init
     param_dtype: DType = float
+    dim: int
+    modes1: int
+    modes2: int = None
+    width: int = 32
+    channel: int = 1
 
     def setup(self):
         # 1) 基础 Slater2nd
@@ -45,6 +51,13 @@ class NNBackflowSlater2nd(nn.Module):
             nn.tanh,
             nn.Dense(self.total_size),
         ])
+        self.FNO = FNOAnsatzFlax(
+            dim=self.dim,
+            modes1=self.modes1,
+            modes2=self.modes2,
+            width=self.width,
+            channel=self.channel
+        )
 
     def __call__(self, n):
         # 确保是 0/1 整数张量

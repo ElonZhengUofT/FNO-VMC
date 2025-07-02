@@ -37,7 +37,9 @@ def make_ansatz_jax(kind: str, dim: int,hilbert, **kwargs) -> nn.Module:
     elif kind == "slaterfno":
         return SlaterFNOFlax(dim=dim, **kwargs)
     elif kind == "backflow":
-        return NNBackflowSlater2nd(hilbert=hilbert)
+        if "modes" in kwargs:
+            kwargs["modes1"] = kwargs.pop("modes")
+        return NNBackflowSlater2nd(hilbert=hilbert, dim=dim, **kwargs)
     else:
         raise ValueError(f"Unknown ansatz kind: {kind}")
 
