@@ -106,7 +106,7 @@ class VMCTrainer:
 
         if vmc_params.get('sr', False):
             precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
-                           1e-5)))  # 1e-4 is a common default value
+                           1e-3)))  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,

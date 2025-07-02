@@ -17,7 +17,7 @@ class NNBackflowSlater2nd(nn.Module):
     hilbert: nk.hilbert.SpinOrbitalFermions
     generalized: bool = False
     restricted: bool = True
-    hidden_units: int = 64
+    hidden_units: int = 16
     kernel_init: NNInitFunc = default_kernel_init
     param_dtype: DType = float
 
