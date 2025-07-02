@@ -11,7 +11,7 @@ from flax.core.frozen_dict import freeze, unfreeze
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
-SLATER_STEPS = 700
+SLATER_STEPS = 1000
 
 def label_fn(path, _):
     return "slater" if path[0] == "slater" else "backflow"
