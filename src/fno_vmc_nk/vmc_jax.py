@@ -2,7 +2,6 @@ import netket as nk
 import numpy as np
 import jax.numpy as jnp
 import jax
-import optax
 import matplotlib.pyplot as plt
 import os
 import wandb
@@ -41,7 +40,6 @@ class VMCTrainer:
 
         rngs = {"params": self._key}
         params = machine.init(rngs, jnp.zeros((hilbert.size,)))["params"]
-
         param_labels = flax.traverse_util.path_aware_map(
             lambda path, _: label_fn(path, _),
             params,
@@ -51,6 +49,7 @@ class VMCTrainer:
 
         # 3) prepare the MCState
         if phase == 2 and variables is not None:
+            variables = freeze(pre_trainer.vstate.variables)
             self.vstate = nk.vqs.MCState(
                 sampler=sampler,
                 model=machine,
