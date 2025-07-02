@@ -111,6 +111,7 @@ def main():
         hamiltonian=hamiltonian,
         ansatz_model=pre_trainer.vstate.model,  # 使用阶段一结束时的参数
         phase=2,  # 指定为第二阶段
+        variables=pre_trainer.vstate.variables,
         vmc_params={**cfg.get("vmc", {})},
         logger=wandb,
     )

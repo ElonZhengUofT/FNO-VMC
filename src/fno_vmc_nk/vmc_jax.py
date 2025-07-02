@@ -12,17 +12,20 @@ from flax.core.frozen_dict import freeze, unfreeze
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
+SLATER_STEPS = 500
+
 def label_fn(path, _):
     return "slater" if path[0] == "slater" else "backflow"
 
 
 #region VMCTrainer Class
 class VMCTrainer:
-    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None):
+    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None,variables=None):
         """
         VMCTrainer Initialization
         """
         # 1) prepare sampler
+        self.phase = phase
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains=64,
@@ -47,12 +50,20 @@ class VMCTrainer:
         self.machine = machine
 
         # 3) prepare the MCState
-        self.vstate = nk.vqs.MCState(
-            sampler=sampler,
-            model=machine,
-            n_samples=vmc_params.get('n_samples', 1000),
-            init_fun=hilbert.random_state
-        )
+        if phase == 2 and variables is not None:
+            self.vstate = nk.vqs.MCState(
+                sampler=sampler,
+                model=machine,
+                n_samples=vmc_params.get('n_samples', 1000),
+                variables=variables,  # ← 传入 pre_trainer.vstate.variables
+            )
+        else:
+            self.vstate = nk.vqs.MCState(
+                sampler=sampler,
+                model=self.machine,
+                n_samples=vmc_params.get('n_samples', 1000),
+                init_fun=hilbert.random_state
+            )
 
         # 4) directly pass the optimizer to the VMC driver
         decay_steps = 100
@@ -119,8 +130,10 @@ class VMCTrainer:
                 opt,
                 variational_state=self.vstate,
             )
-
-        self.n_iter = vmc_params.get('n_iter', 2000)
+        if self.phase == 1:
+            self.n_iter = SLATER_STEPS
+        else:
+            self.n_iter = vmc_params.get('n_iter', 2000)
 
         self.logger = logger
 
@@ -168,6 +181,11 @@ class VMCTrainer:
             if energy < ENERGY_MIN or energy > ENERGY_MAX:
                 energy = np.nan
 
+            if self.phase == 2:
+                step_revised = step + SLATER_STEPS
+            else:
+                step_revised = step
+
             if self.logger is not None:
                 # Log the things you want to track
                 # push to wandb
@@ -176,7 +194,7 @@ class VMCTrainer:
                     "train/variance": variance,
                     "train/acceptance": acceptance
                     # "params": params
-                }, step=step)
+                }, step=step_revised)
             return True
         # check if we can pass some information of param to wandb
 
