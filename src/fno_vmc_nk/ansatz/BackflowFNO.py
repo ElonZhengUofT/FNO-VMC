@@ -21,8 +21,8 @@ class NNBackflowSlater2nd(nn.Module):
     hidden_units: int = 64
     kernel_init: NNInitFunc = default_kernel_init
     param_dtype: DType = float
-    dim: int
-    modes1: int
+    dim: int =2
+    modes1: int = 4
     modes2: int = None
     width: int = 32
     channel: int = 1
