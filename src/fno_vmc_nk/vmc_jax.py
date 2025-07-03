@@ -13,6 +13,8 @@ ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 SLATER_STEPS = 1000
 
+SPLIT = 2 # The number to split the batch of samples
+
 def label_fn(path, _):
     return "slater" if path[0] == "slater" else "backflow"
 
