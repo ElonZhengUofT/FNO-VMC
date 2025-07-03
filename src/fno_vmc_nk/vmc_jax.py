@@ -15,6 +15,12 @@ SLATER_STEPS = 1000
 
 SPLIT = 2 # The number to split the batch of samples
 
+GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
+                (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
+                (8,4): -16.46,(8,2): -11.32}
+
+GROUND_STATE = GROUND_STATES.get((2,7))  # Default value if not found
+
 def label_fn(path, _):
     return "slater" if path[0] == "slater" else "backflow"
 
@@ -147,6 +153,8 @@ class VMCTrainer:
 
         self.log_freq = int(vmc_params.get("log_freq", 2))
 
+        self.ground_state = GROUND_STATE
+
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
@@ -181,6 +189,8 @@ class VMCTrainer:
             if energy < ENERGY_MIN or energy > ENERGY_MAX:
                 energy = np.nan
 
+            relative_error = (energy - self.ground_state) / abs(self.ground_state) if self.ground_state != 0 else np.nan
+
             if self.phase == 2:
                 step_revised = step + SLATER_STEPS
             else:
@@ -192,7 +202,8 @@ class VMCTrainer:
                 self.logger.log({
                     "train/energy": energy,
                     "train/variance": variance,
-                    "train/acceptance": acceptance
+                    "train/acceptance": acceptance,
+                    "train/relative_error": relative_error,
                     # "params": params
                 }, step=step_revised)
             return True
@@ -249,11 +260,14 @@ class VMCTrainer:
         print(
             f"\n=== Inference estimate: ⟨E⟩ = {mean_e:.6f} ± {stderr:.6f} ===")
 
+        relative_error = (mean_e - self.ground_state) / abs(self.ground_state) if self.ground_state != 0 else np.nan
+
         # 如果使用了 WandB，顺便记录
         if self.logger is not None:
             self.logger.log({
                 "inference/energy_mean": mean_e,
                 "inference/energy_stderr": stderr
+                "inference/relative_error": relative_error
             })
         print(">>>>> VMCTrainer.estimate() 执行结束")
 
