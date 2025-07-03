@@ -266,7 +266,7 @@ class VMCTrainer:
         if self.logger is not None:
             self.logger.log({
                 "inference/energy_mean": mean_e,
-                "inference/energy_stderr": stderr
+                "inference/energy_stderr": stderr,
                 "inference/relative_error": relative_error
             })
         print(">>>>> VMCTrainer.estimate() 执行结束")
