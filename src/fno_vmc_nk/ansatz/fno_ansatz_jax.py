@@ -10,6 +10,7 @@ class FNOAnsatzFlax(nn.Module):
     modes2: int = None
     width: int = 32
     channel: int = 1  # number of output channels, default is 1 for scalar output
+    out_dim: int = 1  # output dimension, default is 1 for scalar output
 
     @nn.compact
     def __call__(self, x):
@@ -27,6 +28,8 @@ class FNOAnsatzFlax(nn.Module):
         # global average pooling over spatial dims
         features = jnp.mean(out, axis=(1,2))  # shape (batch, width)
         # final linear head
-        log_psi = nn.Dense(1, kernel_init=nn.initializers.normal(1e-2))(
-            features).squeeze(-1)
+        log_psi = nn.Dense(self.out_dim,
+                           kernel_init=nn.initializers.normal(1e-2))(features)
+        if self.out_dim == 1:
+            log_psi = log_psi.squeeze(-1)
         return log_psi

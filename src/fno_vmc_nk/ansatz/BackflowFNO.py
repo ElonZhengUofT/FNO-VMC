@@ -56,7 +56,8 @@ class NNBackflowSlater2nd(nn.Module):
             modes1=self.modes1,
             modes2=self.modes2,
             width=self.width,
-            channel=self.channel
+            channel=self.channel,
+            out_dim=self.total_size,  # 输出维度为总扁平长度
         )
 
     def __call__(self, n):
@@ -65,7 +66,7 @@ class NNBackflowSlater2nd(nn.Module):
             n = jnp.isclose(n, 1)
 
         # 1) 计算扁平修正向量 F_flat，形状 (..., total_size)
-        F_flat = self.backflow_mlp(n)
+        F_flat = self.FNO(n)
 
         # 单样本下构建修正后的轨道块并计算 logdet
         def single_logdet(n_sample, F_flat_sample):

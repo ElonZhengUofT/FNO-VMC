@@ -13,6 +13,7 @@ from netket.utils.types import DType
 from netket.nn.masked_linear import default_kernel_init
 
 
+
 class SlaterDetFlax(nn.Module):
     """
     Flax Module for Slater determinant with dynamic dimensions inferred from hilbert.
@@ -20,24 +21,25 @@ class SlaterDetFlax(nn.Module):
     Attributes:
       hilbert: 一个 SpinOrbitalFermions 实例，包含粒子数、轨道数等信息。
     """
-    hilbert: SpinOrbitalFermions
-    dtype: DType = jnp.float32
+    hilbert: nk.hilbert.SpinOrbitalFermions
+    generalized: bool = True
+    restricted: bool = True
+    param_dtype: DType = float
+    dim: int = 2
+    modes1: int = 4
+    modes2: int = None
+    width: int = 32
+    channel: int = 1
 
     def setup(self):
-        # 从 hilbert 属性中读取需要的维度
-        n_sites = self.hilbert.size  # 基于格点数
-        n_orbitals = self.hilbert.n_orbitals  # 轨道数
-        n_particles = self.hilbert.n_fermions  # 粒子数
-
-        # 定义一个 DenseGeneral，用于把输入映射到 Slater 矩阵
-        # 输出维度为 [batch, n_sites, n_orbitals]
-        self.orbital_layer = self.param(
-            "orbitals",
-            # Xavier 初始化更稳定
-            nn.initializers.variance_scaling(1.0, "fan_avg", "truncated_normal"),
-            (n_sites, n_particles),
-            self.dtype,
+        self.slater = Slater2nd(
+            hilbert=self.hilbert,
+            generalized=self.generalized,
+            restricted=self.restricted,
+            kernel_init=self.kernel_init,
+            param_dtype=self.param_dtype,
         )
+
 
     def __call__(self, config):
         """

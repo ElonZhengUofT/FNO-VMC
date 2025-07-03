@@ -39,7 +39,7 @@ class VMCTrainer:
         machine = ansatz_model
 
         rngs = {"params": self._key}
-        params = machine.init(rngs, jnp.zeros((hilbert.size,)))["params"]
+        params = machine.init(rngs, jnp.zeros((1,hilbert.size)))["params"]
         param_labels = flax.traverse_util.path_aware_map(
             lambda path, _: label_fn(path, _),
             params,
