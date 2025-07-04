@@ -96,8 +96,8 @@ def main():
     #     for p in model.parameters():
     #         p.data.zero_()
     # wandb.watch_callable(model)
-    vmc_params = cfg.get("vmc", {})
-    ground_state = GROUND_STATES.get((vmc_params.get("U"), vmc_params.get("n_particles")[0]), GROUND_STATE)
+    params = cfg["hamiltonian"]["params"]
+    ground_state = GROUND_STATES.get((params.get("U"), params.get("n_particles")[0]), GROUND_STATE)
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
