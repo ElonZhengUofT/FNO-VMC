@@ -24,7 +24,11 @@ class FNOAnsatzFlax(nn.Module):
             u = x.reshape(batch, L, L, self.channel)
         # apply FNO (expects NHWC)
         modes2 = self.modes2 or 1
-        out = FNO2d(modes1=self.modes1, modes2=modes2, width=self.width)(u)
+
+        u = FNO2d(modes1=self.modes1, modes2=modes2, width=self.width)(u)
+        u = nn.tanh(u)
+        out = FNO2d(modes1=self.modes1, modes2=self.modes2, width=self.width)(u)
+
         # global average pooling over spatial dims
         features = jnp.mean(out, axis=(1,2))  # shape (batch, width)
         # final linear head
