@@ -140,6 +140,7 @@ class VMCTrainer:
             self.n_iter = SLATER_STEPS
         else:
             self.n_iter = vmc_params.get('n_iter', 2000)
+        print(f"SLATER_STEPS = {SLATER_STEPS}, n_iter = {self.n_iter}")
 
         self.logger = logger
 
