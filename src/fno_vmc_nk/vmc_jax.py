@@ -27,7 +27,7 @@ def label_fn(path, _):
 
 #region VMCTrainer Class
 class VMCTrainer:
-    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None,variables=None):
+    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None,variables=None, ground_state=GROUND_STATE):
         """
         VMCTrainer Initialization
         """
@@ -153,8 +153,7 @@ class VMCTrainer:
 
         self.log_freq = int(vmc_params.get("log_freq", 2))
 
-        self.ground_state = GROUND_STATES.get((vmc_params.get("U"), vmc_params.get("n_particles")[0]), GROUND_STATE)
-        print(f">>> VMCTrainer: Ground state energy set to {self.ground_state}")
+        self.ground_state = ground_state
 
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at

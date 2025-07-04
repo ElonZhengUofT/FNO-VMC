@@ -17,6 +17,12 @@ import optax
 import flax
 from flax.core.frozen_dict import freeze, unfreeze
 
+GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
+                (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
+                (8,4): -16.46,(8,2): -11.32}
+
+GROUND_STATE = GROUND_STATES.get((2,7))  # Default value if not found
+
 XLA_FLAGS="--xla_gpu_autotune_level=2"
 
 
@@ -91,6 +97,8 @@ def main():
     #         p.data.zero_()
     # wandb.watch_callable(model)
 
+    ground_state = GROUND_STATES.get((vmc_params.get("U"), vmc_params.get("n_particles")[0]), GROUND_STATE)
+
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
     print("=== Stage 1: training only Slater parameters ===")
@@ -101,6 +109,7 @@ def main():
         phase=1,  # 指定为第一阶段
         vmc_params={**cfg.get("vmc", {})},
         logger=wandb,
+        ground_state=ground_state,
     )
     pre_trainer.run(out=os.path.join(args.outdir, "phase1"),
                  logfile=args.logfile)
@@ -114,6 +123,7 @@ def main():
         variables=pre_trainer.vstate.variables,
         vmc_params={**cfg.get("vmc", {})},
         logger=wandb,
+        ground_state=ground_state,
     )
     trainer.run(out=os.path.join(args.outdir, "phase2"),
                  logfile=args.logfile)
@@ -125,7 +135,8 @@ def main():
         hamiltonian=hamiltonian,
         ansatz_model= model,
         vmc_params=cfg.get("vmc", {}),
-        logger = wandb
+        logger = wandb,
+        ground_state=ground_state,
     )
 
 
