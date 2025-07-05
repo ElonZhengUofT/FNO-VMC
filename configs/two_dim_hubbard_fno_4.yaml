@@ -3,8 +3,8 @@
 hamiltonian:
   type: hubbard      # Type of Hamiltonian
   params:
-    L: 4                # Lattice size (Lx = Ly)
-    dim: 2               # dimension of the system
+    L: 16                # Lattice size (Lx = Ly)
+    dim: 1               # dimension of the system
     U: 4.0               # Coulomb interaction strength
     t: 1.0               # Jumping term
     pbc: True            # Periodic boundary conditions
@@ -13,13 +13,13 @@ hamiltonian:
 
 model_params:
   # FNO ansatz 的超参数
-  modes1: 4           # Number of Fourier modes in x direction (≤ L)
-  modes2: 3           # Number of Fourier modes in y direction (≤ L)
+  modes1: 16           # Number of Fourier modes in x direction (≤ L)
+  # modes2: 3           # Number of Fourier modes in y direction (≤ L)
   width: 16           # Hidden layer width (number of channels)
   channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
 
 vmc:
-  n_samples: 4096 # 8192     # Number of samples for VMC
+  n_samples: 8192 # 8192     # Number of samples for VMC
   lr: 5e-4            # Learning rate for the optimizer
   sr: True            # Whether to use stochastic reconfiguration
   n_iter: 1000         # Number of iterations for VMC
