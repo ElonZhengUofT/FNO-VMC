@@ -33,6 +33,7 @@ class VMCTrainer:
         """
         # 1) prepare sampler
         self.phase = phase
+        self.split_batches = int(vmc_params.get("split_batches", SPLIT))
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains=64,
@@ -212,11 +213,43 @@ class VMCTrainer:
 
         print(">>>>> VMCTrainer.run() 开始执行 —— out =", out)
         print(f">>>>> VMCTrainer.run()：self.n_iter = {self.n_iter}")
-        self.driver.run(
-            self.n_iter,
-            out=out,
-            callback=_wandb_callback
-        )
+        #         self.driver.run(
+        #             self.n_iter,
+        #             out=out,
+        #             callback=_wandb_callback
+        #         )
+
+        n_samples = self.vstate.n_samples
+
+        for step in range(self.n_iter):
+            grad_acc = None
+            stats_acc = None
+            accept_list = []
+            for _ in range(self.split_batches):
+                self.vstate.n_samples = n_samples // self.split_batches
+                stats, grad = self.vstate.expect_and_gradients(self.hamiltonian)
+                accept_list.append(float(getattr(stats, "acceptance", np.nan)))
+                if grad_acc is None:
+                    grad_acc = grad
+                    stats_acc = stats
+                else:
+                    grad_acc = jax.tree_util.tree_map(lambda a, b: a + b,
+                                                      grad_acc, grad)
+                    stats_acc = stats_acc + stats
+            grad_acc = jax.tree_util.tree_map(lambda g: g / self.split_batches,
+                                              grad_acc)
+            stats_acc = stats_acc / self.split_batches
+            updates, self.driver._opt_state = self.driver.optimizer.update(
+                grad_acc, self.driver._opt_state)
+            self.vstate.parameters = optax.apply_updates(self.vstate.parameters,
+                                                         updates)
+
+            loss = {
+                "Energy": stats_acc,
+                "acceptance": sum(accept_list) / len(
+                    accept_list) if accept_list else np.nan,
+            }
+            _wandb_callback(step, loss, self.vstate.parameters)
 
         print(">>>>> VMCTrainer.run() 执行结束")
         #endregion

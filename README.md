@@ -50,6 +50,9 @@ Refer to `experiments/` for examples on running J1-J2 or custom Hamiltonians.
   \]
   where \(S\) is the quantum Fisher information matrix.
 - **Batching**: Monte Carlo samples are generated on-the-fly with NetKet samplers.
+- **split_batches**: Set `vmc.split_batches` in a config file to split each training
+  iteration into multiple sub-batches. Gradients from the sub-batches are averaged
+  before applying an optimizer step, reducing memory usage. The default value is `1`.
 
 ## Experiments & Results
 We validate FNO-VMC on benchmark models:
