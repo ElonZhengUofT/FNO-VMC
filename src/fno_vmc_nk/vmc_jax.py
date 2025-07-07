@@ -241,8 +241,8 @@ class VMCTrainer:
                                               grad_acc)
             energy_mean = energy_acc / self.split_batches
             var_mean = var_acc / self.split_batches
-            updates, self.driver._opt_state = self.driver.optimizer.update(
-                grad_acc, self.driver._opt_state)
+            updates, self.driver._loss_state = self.driver.optimizer.update(
+                grad_acc, self.driver._loss_state)
             self.vstate.parameters = optax.apply_updates(self.vstate.parameters,
                                                          updates)
 
