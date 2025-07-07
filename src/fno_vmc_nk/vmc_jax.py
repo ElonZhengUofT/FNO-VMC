@@ -223,12 +223,15 @@ class VMCTrainer:
 
         for step in range(self.n_iter):
             grad_acc = None
-            stats_acc = None
+            energy_acc = 0.0
+            var_acc = 0.0
             accept_list = []
             for _ in range(self.split_batches):
                 self.vstate.n_samples = n_samples // self.split_batches
                 stats, grad = self.vstate.expect_and_grad(self.hamiltonian)
                 accept_list.append(float(getattr(stats, "acceptance", np.nan)))
+                energy_acc += float(stats.mean)
+                var_acc += float(stats.variance)
                 if grad_acc is None:
                     grad_acc = grad
                 else:
