@@ -230,8 +230,8 @@ class VMCTrainer:
                 self.vstate.n_samples = n_samples // self.split_batches
                 stats, grad = self.vstate.expect_and_grad(self.hamiltonian)
                 accept_list.append(float(getattr(stats, "acceptance", np.nan)))
-                energy_acc += float(stats.mean)
-                var_acc += float(stats.variance)
+                energy_acc += float(stats.mean.real)
+                var_acc += float(stats.variance.real)
                 if grad_acc is None:
                     grad_acc = grad
                 else:
