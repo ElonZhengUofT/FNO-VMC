@@ -213,45 +213,13 @@ class VMCTrainer:
 
         print(">>>>> VMCTrainer.run() 开始执行 —— out =", out)
         print(f">>>>> VMCTrainer.run()：self.n_iter = {self.n_iter}")
-        #         self.driver.run(
-        #             self.n_iter,
-        #             out=out,
-        #             callback=_wandb_callback
-        #         )
+        self.driver.run(
+            self.n_iter,
+            out=out,
+            callback=_wandb_callback
+        )
 
-        n_samples = self.vstate.n_samples
 
-        for step in range(self.n_iter):
-            grad_acc = None
-            energy_acc = 0.0
-            var_acc = 0.0
-            accept_list = []
-            for _ in range(self.split_batches):
-                self.vstate.n_samples = n_samples // self.split_batches
-                stats, grad = self.vstate.expect_and_grad(self.hamiltonian)
-                accept_list.append(float(getattr(stats, "acceptance", np.nan)))
-                energy_acc += float(stats.mean.real)
-                var_acc += float(stats.variance.real)
-                if grad_acc is None:
-                    grad_acc = grad
-                else:
-                    grad_acc = jax.tree_util.tree_map(lambda a, b: a + b,
-                                                      grad_acc, grad)
-            grad_acc = jax.tree_util.tree_map(lambda g: g / self.split_batches,
-                                              grad_acc)
-            energy_mean = energy_acc / self.split_batches
-            var_mean = var_acc / self.split_batches
-            updates, self.driver._loss_stats = self.driver.optimizer.update(
-                grad_acc, self.driver._loss_stats)
-            self.vstate.parameters = optax.apply_updates(self.vstate.parameters,
-                                                         updates)
-
-            loss = {
-                "Energy": stats_acc,
-                "acceptance": sum(accept_list) / len(
-                    accept_list) if accept_list else np.nan,
-            }
-            _wandb_callback(step, loss, self.vstate.parameters)
 
         print(">>>>> VMCTrainer.run() 执行结束")
         #endregion
