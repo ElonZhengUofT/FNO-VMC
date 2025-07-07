@@ -227,7 +227,7 @@ class VMCTrainer:
             accept_list = []
             for _ in range(self.split_batches):
                 self.vstate.n_samples = n_samples // self.split_batches
-                stats, grad = self.vstate.expect_and_gradients(self.hamiltonian)
+                stats, grad = self.vstate.expect_and_grad(self.hamiltonian)
                 accept_list.append(float(getattr(stats, "acceptance", np.nan)))
                 if grad_acc is None:
                     grad_acc = grad
