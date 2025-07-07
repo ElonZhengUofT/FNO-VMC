@@ -231,14 +231,13 @@ class VMCTrainer:
                 accept_list.append(float(getattr(stats, "acceptance", np.nan)))
                 if grad_acc is None:
                     grad_acc = grad
-                    stats_acc = stats
                 else:
                     grad_acc = jax.tree_util.tree_map(lambda a, b: a + b,
                                                       grad_acc, grad)
-                    stats_acc = stats_acc + stats
             grad_acc = jax.tree_util.tree_map(lambda g: g / self.split_batches,
                                               grad_acc)
-            stats_acc = stats_acc / self.split_batches
+            energy_mean = energy_acc / self.split_batches
+            var_mean = var_acc / self.split_batches
             updates, self.driver._opt_state = self.driver.optimizer.update(
                 grad_acc, self.driver._opt_state)
             self.vstate.parameters = optax.apply_updates(self.vstate.parameters,
