@@ -13,7 +13,7 @@ ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 SLATER_STEPS = 200
 
-SPLIT = 16 # The number to split the batch of samples
+SPLIT = 1 # The number to split the batch of samples
 
 GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
                 (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
@@ -40,7 +40,7 @@ class VMCTrainer:
 
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
-            n_chains=64,
+            n_chains=32,
             n_sweeps=2
         )
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
@@ -212,6 +212,7 @@ class VMCTrainer:
                     "train/variance": variance,
                     "train/acceptance": acceptance,
                     "train/relative_error": relative_error,
+                    "train/log_relative_error": np.log10(abs(relative_error)) if relative_error != 0 else np.nan,
                     # "params": params
                 }, step=step_revised)
             return True
