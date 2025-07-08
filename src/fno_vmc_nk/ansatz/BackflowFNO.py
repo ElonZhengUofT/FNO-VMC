@@ -108,7 +108,7 @@ class NNBackflowSlater2nd(nn.Module):
         if n.ndim == 1:
             return single_logdet(n, F_flat)
         else:
-            batch_size = 256  # 你可以根据显存/性能自行调节
+            batch_size = 16  # 2048 is max for 4090 GPU
             logdets = []
             # 按 batch_size 切块
             for i in range(0, n.shape[0], batch_size):
