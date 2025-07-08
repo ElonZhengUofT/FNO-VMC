@@ -9,7 +9,7 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
   #export XLA_FLAGS="--xla_gpu_autotune_level=2"
   python -m src.scripts.train \
     --ansatz backflow \
-    --config configs/one_dim_hubbard_fno_4.yaml \
+    --config configs/one_dim_hubbard_fno_16.yaml \
     --outdir resul/fno_run \
     --logfile logs/fno_run.log
 EOF
