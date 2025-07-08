@@ -19,7 +19,7 @@ model_params:
   channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
 
 vmc:
-  n_samples: 4096 # 8192     # Number of samples for VMC
+  n_samples: 8192 # 8192     # Number of samples for VMC
   lr: 5e-4            # Learning rate for the optimizer
   sr: True            # Whether to use stochastic reconfiguration
   n_iter: 1000         # Number of iterations for VMC
