@@ -33,7 +33,10 @@ class VMCTrainer:
         """
         # 1) prepare sampler
         self.phase = phase
+
         self.split_batches = int(vmc_params.get("split_batches", SPLIT))
+        chunk_size = vmc_params.get('n_samples', 1000) // self.split_batches
+
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains=64,
@@ -63,13 +66,15 @@ class VMCTrainer:
                 model=machine,
                 n_samples=vmc_params.get('n_samples', 1000),
                 variables=variables,  # ← 传入 pre_trainer.vstate.variables
+                chunk_size=chunk_size,
             )
         else:
             self.vstate = nk.vqs.MCState(
                 sampler=sampler,
                 model=self.machine,
                 n_samples=vmc_params.get('n_samples', 1000),
-                init_fun=hilbert.random_state
+                init_fun=hilbert.random_state,
+                chunk_size=chunk_size,
             )
 
         # 4) directly pass the optimizer to the VMC driver
@@ -218,8 +223,6 @@ class VMCTrainer:
             out=out,
             callback=_wandb_callback
         )
-
-
 
         print(">>>>> VMCTrainer.run() 执行结束")
         #endregion
