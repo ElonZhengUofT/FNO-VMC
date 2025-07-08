@@ -36,6 +36,7 @@ class VMCTrainer:
 
         self.split_batches = int(vmc_params.get("split_batches", SPLIT))
         chunk_size = vmc_params.get('n_samples', 1000) // self.split_batches
+        print(f"chunk_size = {chunk_size}, split_batches = {self.split_batches}")
 
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
