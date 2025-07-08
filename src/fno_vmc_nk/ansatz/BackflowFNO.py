@@ -108,7 +108,16 @@ class NNBackflowSlater2nd(nn.Module):
         if n.ndim == 1:
             return single_logdet(n, F_flat)
         else:
-            return jax.vmap(single_logdet, in_axes=(0, 0))(n, F_flat)
+            batch_size = 32  # 你可以根据显存/性能自行调节
+            logdets = []
+            # 按 batch_size 切块
+            for i in range(0, n.shape[0], batch_size):
+                ni = n[i: i + batch_size]
+                Fi = F_flat[i: i + batch_size]
+                # 对这一小块做 vmap
+                logdets.append(jax.vmap(single_logdet, in_axes=(0, 0))(ni, Fi))
+            # 最后拼回整个 batch
+            return jnp.concatenate(logdets, axis=0)
 
 # —— 使用示例 ——
 # hi = SpinOrbitalFermions(...); graph = ...
