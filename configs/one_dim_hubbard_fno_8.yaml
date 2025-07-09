@@ -3,19 +3,19 @@
 hamiltonian:
   type: hubbard      # Type of Hamiltonian
   params:
-    L: 16                # Lattice size (Lx = Ly)
+    L: 8                # Lattice size (Lx = Ly)
     dim: 1               # dimension of the system
     U: 4.0               # Coulomb interaction strength
     t: 1.0               # Jumping term
     pbc: True            # Periodic boundary conditions
     # for half-filling with Sz_total=0, take N_up = N_down = L*L/2
-    n_particles: [7, 7]  # Number of particles [N_up, N_down]
+    n_particles: [4, 4]  # Number of particles [N_up, N_down]
 
 model_params:
   # FNO ansatz 的超参数
   modes1: 16           # Number of Fourier modes in x direction (≤ L)
   modes2: 1          # Number of Fourier modes in y direction (≤ L)
-  width: 16           # Hidden layer width (number of channels)
+  width: 32           # Hidden layer width (number of channels)
   channel: 2         # Number of channels in the input layer (2 for spin-up and spin-down)
 
 vmc:

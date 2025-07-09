@@ -13,7 +13,7 @@ ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 SLATER_STEPS = 200
 
-SPLIT = 1 # The number to split the batch of samples
+SPLIT = 2 # The number to split the batch of samples
 
 GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
                 (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
@@ -110,7 +110,7 @@ class VMCTrainer:
             )
             backflow_opt = optax.adam(learning_rate=lr_schedule)
             transform = optax.multi_transform(
-                {"slater": optax.set_to_zero(),
+                {"slater": backflow_opt,
                  "backflow": backflow_opt},
                 param_labels,
             )
