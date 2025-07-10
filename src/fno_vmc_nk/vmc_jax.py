@@ -80,7 +80,7 @@ class VMCTrainer:
             )
 
         # 4) directly pass the optimizer to the VMC driver
-        decay_steps = 2
+        decay_steps = 100
         decay_rate = 0.95
 
         if phase == 1:
