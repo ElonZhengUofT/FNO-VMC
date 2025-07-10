@@ -20,6 +20,7 @@ GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
                 (8,4): -16.46,(8,2): -11.32}
 
 GROUND_STATE = GROUND_STATES.get((2,7))  # Default value if not found
+GROUND_STATE = -11.36
 
 def label_fn(path, _):
     return "slater" if path[0] == "slater" else "backflow"
@@ -79,7 +80,7 @@ class VMCTrainer:
             )
 
         # 4) directly pass the optimizer to the VMC driver
-        decay_steps = 100
+        decay_steps = 2
         decay_rate = 0.95
 
         if phase == 1:
