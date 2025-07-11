@@ -82,7 +82,7 @@ class VMCTrainer:
             )
 
         # 4) directly pass the optimizer to the VMC driver
-        decay_steps = 100
+        decay_steps = 50
         decay_rate = 0.95
 
         if phase == 1:
@@ -91,7 +91,7 @@ class VMCTrainer:
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-4  # 可选：下限
             )
             slater_opt = optax.adam(learning_rate=lr_schedule)
@@ -103,12 +103,12 @@ class VMCTrainer:
             opt = transform
             print(">>> Phase 1 optimizer: only SLATER")
         elif phase == 2:
-            lr = float(vmc_params.get("lr", 5e-3))
+            lr = float(vmc_params.get("lr", 5e-4))
             lr_schedule = optax.exponential_decay(
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-4  # 可选：下限
             )
             backflow_opt = optax.adam(learning_rate=lr_schedule)
@@ -125,7 +125,7 @@ class VMCTrainer:
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-4  # 可选：下限
             )
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
@@ -133,7 +133,7 @@ class VMCTrainer:
 
         if vmc_params.get('sr', False):
             precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
-                           1e-3)))  # 1e-4 is a common default value
+                           1e-2)))  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
@@ -165,6 +165,7 @@ class VMCTrainer:
         self.log_freq = int(vmc_params.get("log_freq", 2))
 
         self.ground_state = ground_state
+        print(f"Ground state energy: {self.ground_state}")
 
         self._last_time = time.perf_counter()
 
