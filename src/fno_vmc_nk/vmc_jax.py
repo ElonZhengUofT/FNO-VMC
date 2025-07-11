@@ -114,7 +114,7 @@ class VMCTrainer:
             slater_opt = optax.adam(learning_rate=1e-6)
             backflow_opt = optax.adam(learning_rate=lr_schedule)
             transform = optax.multi_transform(
-                {"slater": backflow_opt,
+                {"slater": optax.set_to_zero(),
                  "backflow": backflow_opt},
                 param_labels,
             )
