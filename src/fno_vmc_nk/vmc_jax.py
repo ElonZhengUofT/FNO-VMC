@@ -215,6 +215,7 @@ class VMCTrainer:
                     "train/acceptance": acceptance,
                     "train/relative_error": relative_error,
                     "train/log_relative_error": np.log10(abs(relative_error)) if relative_error != 0 else np.nan,
+                    "train/velocity": velocity,
                     # "params": params
                 }, step=step_revised)
             return True
