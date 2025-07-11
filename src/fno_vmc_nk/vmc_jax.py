@@ -40,9 +40,11 @@ class VMCTrainer:
 
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
-            n_chains=32,
-            n_sweeps=2
+            n_chains_per_rank=16,
+            sweep_size=2,
         )
+        sampler = nk.sampler.MetropolisExchange(
+
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
 
         print("Hamiltonian:", hamiltonian)
