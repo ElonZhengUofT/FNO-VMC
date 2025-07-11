@@ -184,6 +184,7 @@ class VMCTrainer:
                 return True
 
             print(f">>>> callback, step = {step}, energy = {loss.get('Energy')}")
+            print(f"[Step {step}] loss keys: {list(loss.keys())}")
             samples = self.vstate.samples
 
             acceptance = float(loss.get("acceptance", np.nan))
