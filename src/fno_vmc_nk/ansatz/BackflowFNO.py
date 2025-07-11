@@ -66,7 +66,7 @@ class NNBackflowSlater2nd(nn.Module):
             n = jnp.isclose(n, 1)
 
         # 1) 计算扁平修正向量 F_flat，形状 (..., total_size)
-        F_flat = self.backflow_mlp(n.astype(self.param_dtype))
+        F_flat = self.backflow_mlp(n)
 
         # 单样本下构建修正后的轨道块并计算 logdet
         def single_logdet(n_sample, F_flat_sample):
