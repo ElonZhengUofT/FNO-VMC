@@ -55,7 +55,7 @@ def main():
     wandb.init(
         project = args.wandb_project,
         config = cfg,
-        name = f"{args.ansatz}-{os.path.basename(args.config)}".
+        name = f"{args.ansatz}-{os.path.basename(args.config)}",
         sync_tensorboard = False,
         _disable_stats = True
     )
