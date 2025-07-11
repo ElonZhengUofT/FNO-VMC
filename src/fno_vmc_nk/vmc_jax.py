@@ -19,7 +19,6 @@ GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
                 (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
                 (8,4): -16.46,(8,2): -11.32}
 
-GROUND_STATE = GROUND_STATES.get((2,7))  # Default value if not found
 GROUND_STATE = -11.36
 
 def label_fn(path, _):
