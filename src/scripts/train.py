@@ -64,6 +64,9 @@ def main():
 
     artifact = wandb.Artifact(f"{args.ansatz}_config", type="config")
     artifact.add_file(args.config)
+    # 吧vmc.jax和 trian.py也加入artifact
+    artifact.add_file("src/fno_vmc_nk/vmc_jax.py")
+    artifact.add_file("src/scripts/train.py")
     wandb.log_artifact(artifact)
 
     # build Hamiltonian
