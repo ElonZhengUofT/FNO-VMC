@@ -132,7 +132,7 @@ class VMCTrainer:
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if False #vmc_params.get('sr', False):
+        if False: #vmc_params.get('sr', False):
             precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
                            1e-3)))  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
