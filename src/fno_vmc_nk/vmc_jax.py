@@ -7,7 +7,9 @@ import os
 import wandb
 import optax
 import flax
+import time
 from flax.core.frozen_dict import freeze, unfreeze
+
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
@@ -164,6 +166,8 @@ class VMCTrainer:
 
         self.ground_state = ground_state
 
+        self._last_time = time.perf_counter()
+
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
@@ -184,11 +188,15 @@ class VMCTrainer:
                 return True
 
             print(f">>>> callback, step = {step}, energy = {loss.get('Energy')}")
-            print(f"[Step {step}] loss keys: {list(loss.keys())}")
             samples = self.vstate.samples
 
+            now = time.perf_counter()
+            dt = now - self._last_time
+            # 这次 callback 覆盖了 log_freq 步
+            sec_per_step = dt / self.log_freq if dt > 0 else float("nan")
+            self._last_time = now
+
             acceptance = float(loss.get("acceptance", np.nan))
-            velocity = float(loss.get("velocity", np.nan))
             stats = loss["Energy"]
             energy = float(stats.mean.real)  # e.g. 28.33
             variance = float(stats.variance.real)  # e.g. 77.66
@@ -216,7 +224,7 @@ class VMCTrainer:
                     "train/acceptance": acceptance,
                     "train/relative_error": relative_error,
                     "train/log_relative_error": np.log10(abs(relative_error)) if relative_error != 0 else np.nan,
-                    "train/velocity": velocity,
+                    "train/velocity": sec_per_step,
                     # "params": params
                 }, step=step_revised)
             return True
