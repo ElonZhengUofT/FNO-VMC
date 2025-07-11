@@ -187,6 +187,7 @@ class VMCTrainer:
             samples = self.vstate.samples
 
             acceptance = float(loss.get("acceptance", np.nan))
+            velocity = float(loss.get("velocity", np.nan))
             stats = loss["Energy"]
             energy = float(stats.mean.real)  # e.g. 28.33
             variance = float(stats.variance.real)  # e.g. 77.66
