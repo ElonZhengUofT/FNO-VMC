@@ -41,7 +41,7 @@ class VMCTrainer:
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
             n_chains_per_rank=16,
-            sweep_size=2,
+            sweep_size=8,
         )
 
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))

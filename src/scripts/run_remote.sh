@@ -1,28 +1,17 @@
 #!/usr/bin/env bash
-REMOTE_USER="user"
-REMOTE_HOST="remote.server.com"
-REMOTE_PROJECT_DIR="~/projects/FNO-VMC"
-VENV_PATH="~/.venvs/fno-vmc"
 
-#
-WANDB_API_KEY="your_real_wandb_api_key_here"
-#
-
-ANSATZ="fno"
-CONFIG_PATH="configs/fno_config.yaml"
-OUTDIR="results/fno_run1"
-WANDB_PROJECT="FNO-VMC"
-
-ssh ${REMOTE_USER}@${REMOTE_HOST} << EOF
-  cd ${REMOTE_PROJECT_DIR} || exit
-  source ${VENV_PATH}/bin/activate
-  export WANDB_API_KEY=${WANDB_API_KEY}
-  nohup python scripts/train.py \
-    --ansatz ${ANSATZ} \
-    --config ${CONFIG_PATH} \
-    --outdir ${OUTDIR} \
-    --wandb_project ${WANDB_PROJECT} \
-    > logs/${ANSATZ}-run.log 2>&1 &
+ssh -X r04vufj4hus63j-64411b66@ssh.runpod.io -i ~/.ssh/id_ed25519 << 'EOF'
+  # source ~/miniconda/etc/profile.d/conda.sh
+  # conda activate fnovmc
+  cd home
+  cd FNO-VMC
+  git pull
+  export XLA_FLAGS="--xla_gpu_autotune_level=2"
+  python -m src.scripts.train \
+    --ansatz backflow \
+    --config configs/one_dim_hubbard_fno_16.yaml \
+    --outdir resul/fno_run \
+    --logfile logs/fno_run.log
 EOF
 
-echo "Already started remote training task: ${ANSATZ} (outdir=${OUTDIR}), logs saved to logs/${ANSATZ}-run.log"
+ssh -X shizhao@131.215.142.161
