@@ -99,6 +99,7 @@ def main():
     # wandb.watch_callable(model)
     params = cfg["hamiltonian"]["params"]
     ground_state = GROUND_STATES.get((params.get("U"), params.get("n_particles")[0]), GROUND_STATE)
+    ground_state = -11.36
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
