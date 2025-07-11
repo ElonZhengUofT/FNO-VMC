@@ -82,7 +82,7 @@ class VMCTrainer:
             )
 
         # 4) directly pass the optimizer to the VMC driver
-        decay_steps = 50
+        decay_steps = 100
         decay_rate = 0.95
 
         if phase == 1:
@@ -91,8 +91,8 @@ class VMCTrainer:
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
-                end_value=1e-4  # 可选：下限
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-5  # 可选：下限
             )
             slater_opt = optax.adam(learning_rate=lr_schedule)
             transform = optax.multi_transform(
@@ -108,8 +108,8 @@ class VMCTrainer:
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
-                end_value=1e-4  # 可选：下限
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-5  # 可选：下限
             )
             slater_opt = optax.adam(learning_rate=1e-6)
             backflow_opt = optax.adam(learning_rate=lr_schedule)
@@ -126,15 +126,15 @@ class VMCTrainer:
                 init_value=lr,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
-                staircase=False,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-4  # 可选：下限
             )
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if vmc_params.get('sr', False):
+        if False #vmc_params.get('sr', False):
             precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
-                           1e-2)))  # 1e-4 is a common default value
+                           1e-3)))  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
