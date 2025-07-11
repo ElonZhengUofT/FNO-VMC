@@ -42,7 +42,7 @@ class VMCTrainer:
 
         sampler = nk.sampler.MetropolisLocal(
             hilbert,
-            n_chains_per_rank=16,
+            n_chains_per_rank=32,
             sweep_size=8,
         )
 
