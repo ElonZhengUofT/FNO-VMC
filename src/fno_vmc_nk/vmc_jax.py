@@ -15,7 +15,7 @@ from flax.core.frozen_dict import freeze, unfreeze
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
-SLATER_STEPS = 200
+SLATER_STEPS = 400
 
 SPLIT = 1 # The number to split the batch of samples
 
