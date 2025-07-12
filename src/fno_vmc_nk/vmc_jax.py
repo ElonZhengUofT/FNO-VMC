@@ -150,7 +150,7 @@ class VMCTrainer:
             )
             print(">>> Using SR preconditioner")
             precond = nk.optimizer.SR(
-                qgt=QGTOnTheFly(),
+                qgt=QGTAuto(),  # QFTOnTheFly() or QGTAuto()
                 diag_shift=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
