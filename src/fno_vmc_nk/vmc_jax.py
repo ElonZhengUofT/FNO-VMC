@@ -90,7 +90,7 @@ class VMCTrainer:
 ################################################################################
         # 4) directly pass the optimizer to the VMC driver
         decay_steps = 100
-        decay_rate = 0.95
+        decay_rate = 0.85
 
         if phase == 1:
             lr = float(vmc_params.get("lr_slater", 1e-2))
@@ -147,7 +147,7 @@ class VMCTrainer:
                 solver=functools.partial(
                     jsp.cg,
                     tol=1e-2,  # 设置求解器的容忍度
-                    maxiter=1000,  # 最大迭代次数
+                    maxiter=100,  # 最大迭代次数
                 )
             )  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
