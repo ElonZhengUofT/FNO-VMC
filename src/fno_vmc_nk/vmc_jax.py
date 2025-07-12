@@ -18,7 +18,7 @@ ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
 SLATER_STEPS = 400
 
-SPLIT = 4 # The number to split the batch of samples
+SPLIT = 1 # The number to split the batch of samples
 
 GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
                 (8,8): -8.32,(8,7): -11.984,(8,6): -14.92,
