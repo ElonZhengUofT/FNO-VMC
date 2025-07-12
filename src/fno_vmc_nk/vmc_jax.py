@@ -142,7 +142,6 @@ class VMCTrainer:
 
         if vmc_params.get('sr', False):
             diag_schedule = optax.exponential_decay(
-                qgt=QGTAuto(),
                 init_value=float(vmc_params.get("diagshift", 1e-2)),
                 transition_steps=100,
                 decay_rate=0.8,
@@ -151,6 +150,7 @@ class VMCTrainer:
             )
             print(">>> Using SR preconditioner")
             precond = nk.optimizer.SR(
+                qgt=QGTAuto(),
                 diag_shift=diag_schedule,
                 diag_scale=diag_schedule,
                 solver=functools.partial(
