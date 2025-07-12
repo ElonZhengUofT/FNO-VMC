@@ -10,6 +10,7 @@ import flax
 import time
 import functools
 import jax.scipy.sparse.linalg as jsp
+from netket.optimizer import QGTAuto
 from flax.core.frozen_dict import freeze, unfreeze
 
 
