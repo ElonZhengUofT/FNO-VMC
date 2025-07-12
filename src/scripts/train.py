@@ -119,7 +119,7 @@ def main():
     pre_trainer.run(out=os.path.join(args.outdir, "phase1"),
                  logfile=args.logfile)
 
-    print("=== Stage 2: training only Backflow MLP ===")
+    print("=== Stage 2: training Backflow MLP ===")
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,

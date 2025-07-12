@@ -8,6 +8,8 @@ import wandb
 import optax
 import flax
 import time
+import functools
+import jax.scipy.sparse.linalg as jsp
 from flax.core.frozen_dict import freeze, unfreeze
 
 
@@ -64,7 +66,7 @@ class VMCTrainer:
         self.machine = machine
 
         # 3) prepare the MCState
-        if phase == 2 and variables is not None:
+        if (phase == 2 or phase == 3) and variables is not None:
             self.vstate = nk.vqs.MCState(
                 sampler=sampler,
                 model=machine,
@@ -114,14 +116,14 @@ class VMCTrainer:
             slater_opt = optax.adam(learning_rate=1e-6)
             backflow_opt = optax.adam(learning_rate=lr_schedule)
             transform = optax.multi_transform(
-                {"slater": optax.set_to_zero(),
+                {"slater": slater_opt,
                  "backflow": backflow_opt},
                 param_labels,
             )
             opt = transform
             print(">>> Phase 2 optimizer: only BACKFLOW")
         else:
-            lr = float(vmc_params.get("lr", 5e-3))
+            lr = float(vmc_params.get("lr", 5e-3)) * 0.1  # 降低学习率
             lr_schedule = optax.exponential_decay(
                 init_value=lr,
                 transition_steps=decay_steps,
@@ -132,9 +134,17 @@ class VMCTrainer:
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if False: #vmc_params.get('sr', False):
-            precond = nk.optimizer.SR(diag_shift=float(vmc_params.get("diagshift",
-                           1e-3)))  # 1e-4 is a common default value
+        if vmc_params.get('sr', False):
+            print(">>> Using SR preconditioner")
+            precond = nk.optimizer.SR(
+                diag_shift=float(vmc_params.get("diagshift",1e-3)),
+                diag_scale=1e-2,
+                solver=functools.partial(
+                    jsp.cg,
+                    tol=1e-2,  # 设置求解器的容忍度
+                    maxiter=100,  # 最大迭代次数
+                )
+            )  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
@@ -142,6 +152,7 @@ class VMCTrainer:
                 preconditioner=precond,
             )
         else:
+            print(">>> Not using SR preconditioner")
             self.driver = nk.driver.VMC(
                 hamiltonian,
                 opt,
