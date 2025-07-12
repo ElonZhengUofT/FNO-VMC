@@ -82,7 +82,12 @@ class VMCTrainer:
                 init_fun=hilbert.random_state,
                 chunk_size=chunk_size,
             )
-
+################################################################################
+        #     ----     ------    ---------
+        # |       |   |      |       |
+        # |       |   |------        |
+        #   _____     |              |
+################################################################################
         # 4) directly pass the optimizer to the VMC driver
         decay_steps = 100
         decay_rate = 0.95
@@ -137,12 +142,12 @@ class VMCTrainer:
         if vmc_params.get('sr', False):
             print(">>> Using SR preconditioner")
             precond = nk.optimizer.SR(
-                diag_shift=float(vmc_params.get("diagshift",1e-3)),
-                diag_scale=1e-2,
+                diag_shift=float(vmc_params.get("diagshift",1e-4)),
+                diag_scale=1e-4,
                 solver=functools.partial(
                     jsp.cg,
                     tol=1e-2,  # 设置求解器的容忍度
-                    maxiter=100,  # 最大迭代次数
+                    maxiter=1000,  # 最大迭代次数
                 )
             )  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
