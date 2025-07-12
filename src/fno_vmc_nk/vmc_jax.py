@@ -152,7 +152,6 @@ class VMCTrainer:
             precond = nk.optimizer.SR(
                 qgt=QGTOnTheFly(),
                 diag_shift=diag_schedule,
-                diag_scale=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
                     tol=1e-2,  # 设置求解器的容忍度
