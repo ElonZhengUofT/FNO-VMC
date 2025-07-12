@@ -43,6 +43,8 @@ def make_hamiltonian(ham_type: str, params: dict):
     dim  = params.get("dim", 1)
     pbc  = params.get("pbc", True)
 
+    print(f"Building Hamiltonian: type={ham_type}, L={L}, dim={dim}, pbc={pbc}")
+
     graph = nk.graph.Hypercube(length=L, n_dim=dim, pbc=pbc)
     N_sites = graph.n_nodes
 
