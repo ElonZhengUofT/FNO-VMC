@@ -219,7 +219,6 @@ class VMCTrainer:
                 "variational_state": str(self.vstate),
                 "machine": str(self.machine),
                 "hilbert": str(hilbert),
-                "hamiltonian": str(hamiltonian),
                 "initial_parameters": unfreeze(self.vstate.variables)
             })
             self.logger.watch(self.vstate.model, log="all", log_freq=self.log_freq)
