@@ -221,7 +221,7 @@ class VMCTrainer:
                 "hilbert": str(hilbert),
                 "initial_parameters": unfreeze(self.vstate.variables)
             })
-            self.logger.watch(self.vstate.model, log="all", log_freq=self.log_freq)
+            # self.logger.watch(self.vstate.model, log="all", log_freq=self.log_freq)
         # print the initial parameters
         print("=== VMCTrainer 初始化完成 ===")
         print(f"Phase: {self.phase}, n_iter: {self.n_iter}, "
