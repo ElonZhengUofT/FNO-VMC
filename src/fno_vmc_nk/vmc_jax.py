@@ -205,6 +205,37 @@ class VMCTrainer:
         #         self._switch_at = int(vmc_params.get("switch_at", 150))
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
+        # Record the initial parameters
+        if self.logger is not None:
+            self.logger.config.update({
+                "phase": phase,
+                "n_iter": self.n_iter,
+                "split_batches": self.split_batches,
+                "ground_state": ground_state,
+                "log_freq": self.log_freq,
+                "optimizer": str(opt),
+                "sampler": str(sampler),
+                "variational_state": str(self.vstate),
+                "machine": str(self.machine),
+                "hilbert": str(hilbert),
+                "hamiltonian": str(hamiltonian),
+                "initial_parameters": unfreeze(self.vstate.variables)
+            })
+            self.logger.watch(self.vstate.model, log="all", log_freq=self.log_freq)
+        # print the initial parameters
+        print("=== VMCTrainer 初始化完成 ===")
+        print(f"Phase: {self.phase}, n_iter: {self.n_iter}, "
+                f"split_batches: {self.split_batches}, "
+                f"ground_state: {self.ground_state}, log_freq: {self.log_freq}")
+        print(f"Optimizer: {self.driver.optimizer}")
+        print(f"Sampler: {self.sampler}")
+        print(f"Variational State: {self.vstate}")
+        print(f"Machine: {self.machine}")
+        print(f"Hilbert space: {self.hilbert}")
+        print(f"Hamiltonian: {self.hamiltonian}")
+        print(f"Initial parameters: {self.vstate.variables}")
+        print("=====================================")
+
     # region Run Method
     def run(self, out='result', logfile=None):
         if logfile:
