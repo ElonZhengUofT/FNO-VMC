@@ -74,6 +74,7 @@ class VMCTrainer:
                 n_samples=vmc_params.get('n_samples', 1000),
                 variables=variables,  # ← 传入 pre_trainer.vstate.variables
                 chunk_size=chunk_size,
+
             )
         else:
             self.vstate = nk.vqs.MCState(

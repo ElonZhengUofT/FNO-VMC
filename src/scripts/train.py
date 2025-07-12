@@ -25,6 +25,8 @@ GROUND_STATE = GROUND_STATES.get((2,7))  # Default value if not found
 
 XLA_FLAGS="--xla_gpu_autotune_level=2"
 
+jax.config.update("jax_enable_x64", True)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Train VMC with different ansatz and models")
