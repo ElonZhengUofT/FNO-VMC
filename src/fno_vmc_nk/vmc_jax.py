@@ -10,7 +10,7 @@ import flax
 import time
 import functools
 import jax.scipy.sparse.linalg as jsp
-from netket.optimizer.qgt import QGTAuto
+from netket.optimizer.qgt import QGTAuto,QGTOnTheFly
 from flax.core.frozen_dict import freeze, unfreeze
 
 
@@ -150,7 +150,7 @@ class VMCTrainer:
             )
             print(">>> Using SR preconditioner")
             precond = nk.optimizer.SR(
-                qgt=QGTAuto(),
+                qgt=QGTOnTheFly(),
                 diag_shift=diag_schedule,
                 diag_scale=diag_schedule,
                 solver=functools.partial(
