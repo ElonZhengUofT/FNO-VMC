@@ -140,10 +140,17 @@ class VMCTrainer:
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
         if vmc_params.get('sr', False):
+            diag_schedule = optax.exponential_decay(
+                init_value=float(vmc_params.get("diagshift", 1e-2)),
+                transition_steps=100,
+                decay_rate=0.8,
+                staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
+                end_value=1e-4  # 可选：下限
+            )
             print(">>> Using SR preconditioner")
             precond = nk.optimizer.SR(
-                diag_shift=float(vmc_params.get("diagshift",1e-4)),
-                diag_scale=1e-4,
+                diag_shift=diag_schedule,
+                diag_scale=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
                     tol=1e-2,  # 设置求解器的容忍度
@@ -163,6 +170,14 @@ class VMCTrainer:
                 opt,
                 variational_state=self.vstate,
             )
+        ########################################################################
+        #     ----     ------    ---------
+        # |       |   |      |       |
+        # |       |   |------        |
+        #   _____     |              |
+        ########################################################################
+
+        # 5) set the number of iterations
         if self.phase == 1:
             self.n_iter = SLATER_STEPS
         else:
