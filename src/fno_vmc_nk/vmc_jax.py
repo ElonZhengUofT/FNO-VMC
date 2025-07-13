@@ -158,7 +158,7 @@ class VMCTrainer:
                 diag_shift=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
-                    tol=1e-8,  # 设置求解器的容忍度
+                    tol=1e-5,  # 设置求解器的容忍度
                     maxiter=1000,  # 最大迭代次数
                 )
             )  # 1e-4 is a common default value
