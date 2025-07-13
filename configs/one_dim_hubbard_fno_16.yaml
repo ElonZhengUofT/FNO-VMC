@@ -20,7 +20,7 @@ model_params:
 
 vmc:
   n_samples: 4096 # 8192     # Number of samples for VMC
-  lr: 5e-4            # Learning rate for the optimizer
+  lr: 5e-3            # Learning rate for the optimizer
   sr: False            # Whether to use stochastic reconfiguration
   n_iter: 20000         # Number of iterations for VMC
   init_state: random  # Initial state for the wave function, can be 'random' or 'ground_state'
