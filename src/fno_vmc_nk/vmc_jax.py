@@ -11,6 +11,8 @@ import time
 import functools
 import jax.scipy.sparse.linalg as jsp
 from netket.optimizer.qgt import QGTAuto,QGTOnTheFly
+import netket.experimental as nkx
+# from nkx.driver import VMC_SRt
 from flax.core.frozen_dict import freeze, unfreeze
 
 
@@ -156,8 +158,8 @@ class VMCTrainer:
                 diag_shift=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
-                    tol=1e-2,  # 设置求解器的容忍度
-                    maxiter=100,  # 最大迭代次数
+                    tol=1e-5,  # 设置求解器的容忍度
+                    maxiter=1000,  # 最大迭代次数
                 )
             )  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
