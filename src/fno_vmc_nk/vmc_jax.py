@@ -115,7 +115,7 @@ class VMCTrainer:
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-5  # 可选：下限
             )
-            slater_opt = optax.adam(learning_rate=lr_schedule)
+            slater_opt = optax.adamw(learning_rate=lr_schedule)
             transform = optax.multi_transform(
                 {"slater": slater_opt,
                  "backflow": optax.set_to_zero()},
@@ -132,8 +132,8 @@ class VMCTrainer:
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
                 end_value=1e-5  # 可选：下限
             )
-            slater_opt = optax.adam(learning_rate=1e-6)
-            backflow_opt = optax.adam(learning_rate=lr_schedule)
+            slater_opt = optax.adamw(learning_rate=1e-6)
+            backflow_opt = optax.adamw(learning_rate=lr_schedule)
             transform = optax.multi_transform(
                 {"slater": slater_opt,
                  "backflow": backflow_opt},
