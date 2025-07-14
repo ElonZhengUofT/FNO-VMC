@@ -22,5 +22,13 @@ def mmm(tag=None):
     torch.cuda.reset_peak_memory_stats()
     print()
 
+def version_check():
+    import jax, torch, netket
+    print("jax:", jax.__version__, "backend:",
+          jax.lib.xla_bridge.get_backend().platform)
+    print("torch:", torch.__version__, "CUDA:", torch.version.cuda)
+    print("netket:", netket.__version__)
+
 if __name__ == "__main__":
-    mmm()
+    # mmm()
+    version_check()
