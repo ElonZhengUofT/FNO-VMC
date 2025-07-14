@@ -116,6 +116,7 @@ def main():
     pre_trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
+        graph=graph,
         ansatz_model=model,
         phase=1,  # 指定为第一阶段
         vmc_params={**cfg.get("vmc", {})},
@@ -129,6 +130,7 @@ def main():
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
+        graph=graph,
         ansatz_model=pre_trainer.vstate.model,  # 使用阶段一结束时的参数
         phase=2,  # 指定为第二阶段
         variables=pre_trainer.vstate.variables,
@@ -144,6 +146,7 @@ def main():
     trainer = VMCTrainer(
         hilbert=hilbert,
         hamiltonian=hamiltonian,
+        graph=graph,
         ansatz_model= model,
         vmc_params=cfg.get("vmc", {}),
         logger = wandb,

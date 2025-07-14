@@ -34,7 +34,7 @@ def label_fn(path, _):
 
 #region VMCTrainer Class
 class VMCTrainer:
-    def __init__(self, hilbert, hamiltonian, ansatz_model, vmc_params, logger=None, phase=None,variables=None, ground_state=GROUND_STATE):
+    def __init__(self, hilbert, hamiltonian,graph, ansatz_model, vmc_params, logger=None, phase=None,variables=None, ground_state=GROUND_STATE):
         """
         VMCTrainer Initialization
         """
@@ -45,10 +45,18 @@ class VMCTrainer:
         chunk_size = vmc_params.get('n_samples', 1000) // self.split_batches
         print(f"chunk_size = {chunk_size}, split_batches = {self.split_batches}")
 
-        sampler = nk.sampler.MetropolisLocal(
-            hilbert,
-            n_chains_per_rank=64,
-            sweep_size=1,
+        if phase == 1:
+            sampler = nk.sampler.MetropolisLocal(
+                hilbert,
+                n_chains_per_rank=64,
+                sweep_size=1,
+            )
+        sampler = nk.sampler.MetropolisFermionHop(
+            hilbert=hilbert,  # 必须
+            graph=graph,  # 通常必须（除非 cluster 覆盖）
+            d_max=1,  # 可选，默认=1
+            spin_symmetric=True,  # 可选，默认=True
+            n_chains=64,  # 可选
         )
 
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
@@ -301,6 +309,7 @@ class VMCTrainer:
                     "train/relative_error": relative_error,
                     "train/log_relative_error": np.log10(abs(relative_error)) if relative_error != 0 else np.nan,
                     "train/velocity": sec_per_step,
+                    "train/log_variance": np.log10(variance) if variance > 0 else np.nan,
                     # "params": params
                 }, step=step_revised)
             return True
