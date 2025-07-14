@@ -12,6 +12,7 @@ import functools
 import jax.scipy.sparse.linalg as jsp
 from netket.optimizer.qgt import QGTAuto,QGTOnTheFly
 import netket.experimental as nkx
+from src.fno_vmc_nk.VMC.ClipOperator import ClippedLocalOperator
 # from nkx.driver import VMC_SRt
 from flax.core.frozen_dict import freeze, unfreeze
 
@@ -151,6 +152,13 @@ class VMCTrainer:
             )
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
+
+        if vmc_params.get('clip energy', True):
+            print(">>> Using energy clipping")
+            hamiltonian = ClippedLocalOperator(
+                hamiltonian,
+                threshold=lambda mean, std: 5.0,
+            )
 
         if vmc_params.get('sr', False):
             diag_schedule = optax.exponential_decay(
