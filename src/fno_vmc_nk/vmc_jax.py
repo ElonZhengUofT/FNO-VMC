@@ -19,7 +19,7 @@ from flax.core.frozen_dict import freeze, unfreeze
 
 ENERGY_MIN, ENERGY_MAX = -100000, 100000
 
-SLATER_STEPS = 1
+SLATER_STEPS = 300
 
 SPLIT = 2 # The number to split the batch of samples
 
@@ -153,7 +153,7 @@ class VMCTrainer:
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if vmc_params.get('clip energy', True) and phase != 1:
+        if vmc_params.get('clip energy', True):
             print(">>> Using energy clipping")
             hamiltonian = ClippedLocalOperator(
                 hamiltonian,
