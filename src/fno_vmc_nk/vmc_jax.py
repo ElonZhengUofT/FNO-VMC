@@ -51,13 +51,14 @@ class VMCTrainer:
                 n_chains_per_rank=64,
                 sweep_size=1,
             )
-        sampler = nk.sampler.MetropolisFermionHop(
-            hilbert=hilbert,  # 必须
-            graph=graph,  # 通常必须（除非 cluster 覆盖）
-            d_max=1,  # 可选，默认=1
-            spin_symmetric=True,  # 可选，默认=True
-            n_chains=64,  # 可选
-        )
+        else:
+            sampler = nk.sampler.MetropolisFermionHop(
+                hilbert=hilbert,  # 必须
+                graph=graph,  # 通常必须（除非 cluster 覆盖）
+                d_max=1,  # 可选，默认=1
+                spin_symmetric=True,  # 可选，默认=True
+                n_chains=64,  # 可选
+            )
 
         self._key = jax.random.PRNGKey(vmc_params.get("seed", 42))
 
