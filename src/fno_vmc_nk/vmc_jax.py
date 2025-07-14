@@ -156,6 +156,7 @@ class VMCTrainer:
         if vmc_params.get('clip energy', True):
             print(">>> Using energy clipping")
             hamiltonian = ClippedLocalOperator(
+                hilbert=hilbert,
                 hamiltonian,
                 threshold=lambda mean, std: 5.0,
             )

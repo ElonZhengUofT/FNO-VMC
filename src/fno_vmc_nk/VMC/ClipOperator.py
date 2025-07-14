@@ -3,12 +3,13 @@ import netket as nk
 from netket.operator import LocalOperator
 
 class ClippedLocalOperator(LocalOperator):
-    def __init__(self, hamiltonian, threshold):
+    def __init__(self, hilbert, hamiltonian, threshold):
         """
         base_op: 原始的 LocalOperator（比如 Hubbard Hamiltonian）
         threshold: 绝对值阈值，或一个函数 func(mean, std)->thresh
         """
         super().__init__(
+            hilbert=hilbert,
             operators=hamiltonian
         )
         self.threshold = threshold
