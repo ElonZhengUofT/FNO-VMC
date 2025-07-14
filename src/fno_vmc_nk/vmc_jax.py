@@ -153,7 +153,7 @@ class VMCTrainer:
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if vmc_params.get('clip energy', True):
+        if vmc_params.get('clip energy', True) and phase != 1:
             print(">>> Using energy clipping")
             hamiltonian = ClippedLocalOperator(
                 hilbert,
