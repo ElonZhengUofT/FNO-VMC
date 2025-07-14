@@ -6,9 +6,7 @@ class ClippedLocalOperator(LocalOperator):
     def __init__(self, base_op: LocalOperator, threshold):
         super().__init__(
             hilbert=base_op.hilbert,
-            graph=base_op.graph,
-            operators=base_op._operators,
-            parameters=base_op._parameters
+            operators=base_op._operators
         )
         self.threshold = threshold
 
