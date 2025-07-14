@@ -3,7 +3,7 @@
 # ssh zeus.dgp.toronto.edu
 # ssh zeus
 
-ssh hyas << 'EOF'
+ssh belle << 'EOF'
   # source ~/miniconda/etc/profile.d/conda.sh
   # conda activate fnovmc
   cd FNO-VMC
@@ -19,4 +19,4 @@ ssh hyas << 'EOF'
     --logfile logs/fno_run.log
 EOF
 
-ssh hyas
+ssh belle
