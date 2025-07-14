@@ -3,11 +3,12 @@ import netket as nk
 from netket.operator import LocalOperator
 
 class ClippedLocalOperator(LocalOperator):
-    def __init__(self, base_op: LocalOperator, threshold):
+    def __init__(self, base_op: LocalOperator, graph, threshold):
         super().__init__(
             hilbert=base_op.hilbert,
-            operators=base_op._operators
+            operators=base_op._operators,
         )
+        self.graph = graph
         self.threshold = threshold
 
 

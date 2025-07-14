@@ -157,6 +157,7 @@ class VMCTrainer:
             print(">>> Using energy clipping")
             hamiltonian = ClippedLocalOperator(
                 hamiltonian,
+                graph=graph,
                 threshold=lambda mean, std: 5.0
             )
 
