@@ -167,8 +167,8 @@ class VMCTrainer:
                 diag_shift=diag_schedule,
                 solver=functools.partial(
                     jsp.cg,
-                    tol=1e-5,  # 设置求解器的容忍度
-                    maxiter=100,  # 最大迭代次数
+                    tol=1e-4,  # 设置求解器的容忍度
+                    maxiter=25,  # 最大迭代次数
                 )
             )  # 1e-4 is a common default value
             self.driver = nk.driver.VMC(
