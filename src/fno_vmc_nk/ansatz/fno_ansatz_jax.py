@@ -26,8 +26,8 @@ class FNOAnsatzFlax(nn.Module):
         modes2 = self.modes2 or 1
 
         u = FNO2d(modes1=self.modes1, modes2=modes2, width=self.width)(u)
-        # u = nn.tanh(u)
-        # u = FNO2d(modes1=self.modes1, modes2=self.modes2, width=self.width)(u)
+        u = nn.tanh(u)
+        u = FNO2d(modes1=self.modes1, modes2=self.modes2, width=self.width)(u)
 
         # global average pooling over spatial dims
         features = jnp.mean(u, axis=(1,2))  # shape (batch, width)
