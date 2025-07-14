@@ -3,5 +3,8 @@
 2025-7-12 实现Energy Clipping
 2025-7-12 实现/使用MinSR, SPRING
 
+2025-7-14 依次测试Adam，SR-ADAM 在 越来越大 ansatz上的variance 收敛情况
+2025-7-14 测试MultiDet (单FNO，多FNO）*（Orb+FNO，pureFNO）
+
 
 pretrain

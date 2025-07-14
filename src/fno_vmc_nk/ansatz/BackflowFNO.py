@@ -147,3 +147,5 @@ if __name__ == "__main__":
              nk.operator.fermion.number(hi, u, sz=-1)
     gs = nk.VMC(H, opt, variational_state=vstate, preconditioner=sr)
     gs.run(n_iter=200)
+
+
