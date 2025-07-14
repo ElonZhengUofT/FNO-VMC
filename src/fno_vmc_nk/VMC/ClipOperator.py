@@ -14,16 +14,28 @@ class ClippedLocalOperator(LocalOperator):
         )
         self.threshold = threshold
 
+
     def _apply_locally(self, logpsi, x, *, chunk_size=None):
-        conns, weights = super()._apply_locally(logpsi, x, chunk_size=chunk_size)
-        # 如果 threshold 是函数，就先计算 mean/std
-        if callable(self.threshold):
-            mean = jnp.mean(weights)
-            std  = jnp.std(weights)
-            thr  = self.threshold(mean, std)
-        else:
-            thr = self.threshold
-        # clip 到 [mean-thr, mean+thr]
-        # 也可以直接 clip 到 [-thr, +thr]：jnp.clip(weights, -thr, +thr)
-        clipped = jnp.clip(weights, mean - thr, mean + thr)
-        return conns, clipped
+        # 1. 调用基类算符
+        conns, weights = super()._apply_locally(
+            logpsi, x, chunk_size=chunk_size
+        )  # weights shape (batch, 1)
+
+        # 2. 从 weights 中分离出 E_loc
+        psi = jnp.exp(logpsi(x))               # shape (batch,)
+        E_loc = weights / psi[:, None]         # shape (batch, 1)
+
+        # 3. 计算 mean / std 并剪切
+        E_mean = jnp.real(jnp.mean(E_loc))
+        E_std = jnp.real(jnp.std(E_loc))
+        δ = self.threshold(E_mean, E_std)      # 例如 δ=5.0
+
+        E_loc_clipped = jnp.clip(
+            E_loc,
+            E_mean - δ,
+            E_mean + δ
+        )
+
+        # 4. 重建被剪切后的 weights 并返回
+        weights_clipped = E_loc_clipped * psi[:, None]
+        return conns, weights_clipped
