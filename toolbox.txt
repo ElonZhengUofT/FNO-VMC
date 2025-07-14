@@ -1,1 +1,3 @@
-python -m pip install --upgrade jax==0.6.2 "jax[cuda12]"   -f https://storage.googleapis.com/jax-releases/jax_releases.html
+### python -m pip install --upgrade jax==0.6.2 "jax[cuda12]"   -f https://storage.googleapis.com/jax-releases/jax_releases.html
+python -m pip install netket==3.18
+python -m pip install --upgrade jax_cuda12_plugin==0.5.3
