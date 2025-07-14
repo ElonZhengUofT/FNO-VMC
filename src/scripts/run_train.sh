@@ -17,7 +17,7 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
     --logfile logs/fno_run.log
 
   # （可选）把 prof.out 打包一下方便下载
-  tar czf prof.tgz prof.out
+  # tar czf prof.tgz prof.out
 EOF
 
 ssh -X shizhao@131.215.142.161
