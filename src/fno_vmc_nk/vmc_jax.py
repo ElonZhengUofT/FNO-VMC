@@ -310,6 +310,7 @@ class VMCTrainer:
                     "train/relative_error": relative_error,
                     "train/log_relative_error": np.log10(abs(relative_error)) if relative_error != 0 else np.nan,
                     "train/velocity": sec_per_step,
+                    "train/log_velocity": np.log10(sec_per_step) if sec_per_step > 0 else np.nan,
                     "train/log_variance": np.log10(variance) if variance > 0 else np.nan,
                     # "params": params
                 }, step=step_revised)
