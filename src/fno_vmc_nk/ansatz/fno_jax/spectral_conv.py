@@ -39,3 +39,22 @@ class SpectralConv2d(nn.Module):
         # 逆 FFT 回时域
         x = irfft2d(out_ft, (Nx, Ny))
         return x.transpose((0,2,3,1))  # -> (batch, Nx, Ny, out_channels)
+
+class SpectralConv1d(nn.Module):
+    in_channels: int
+    out_channels: int
+    modes: int  # 保留前 modes 个低频
+    @nn.compact
+    def __call__(self, x):
+        # x: (batch, N, in_channels)
+        x_ft = jnp.fft.rfft(x, axis=1)
+        # 只对前 modes 模式做变换
+        W = self.param('W', jax.nn.initializers.normal(),
+                       (self.in_channels, self.out_channels, self.modes))
+        out_ft = jnp.zeros_like(x_ft)
+        out_ft = out_ft.at[:, :self.modes, :].set(
+            jnp.einsum('bic, ioc -> boc', x_ft[:, :self.modes, :], W)
+        )
+        x1 = jnp.fft.irfft(out_ft, n=x.shape[1], axis=1)
+        return x1
+

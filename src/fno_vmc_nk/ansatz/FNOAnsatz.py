@@ -8,7 +8,7 @@ from netket.experimental.models import Slater2nd
 from netket.nn.masked_linear import default_kernel_init
 from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
-from src.fno_vmc_nk.ansatz.fno_jax import FNO2d
+from src.fno_vmc_nk.ansatz.fno_jax import SpectralConv2d，SpectralConv1d
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 
 class PE(nn.Module):
@@ -30,13 +30,53 @@ class Lifting(nn.Module):
     Lifting module for FNO.
     Maps input features to a higher-dimensional space.
     """
-    hidden_features: int = 64
+    hidden_features: int = 32
 
     @nn.compact
     def __call__(self, x):
         # x shape: (batch, n_features)
         # output shape: (batch, n_features, width)
         return nn.Dense(self.hidden_features, kernel_init=nn.initializers.normal(1e-2))(x)
+
+
+class FNOBlock1D(nn.Module):
+    """
+    A single FNO block consisting of spectral convolution and pointwise convolution.
+    """
+    width: int = 32  # Width of the hidden layers, typically the number of hidden features
+    depth: int = 4
+    modes: int = 16  # Number of Fourier modes
+
+    @nn.compact
+    def __call__(self, x):
+        for _ in range(self.depth):
+            x1 = SpectralConv1d(self.width, self.width, self.modes)(x)
+            x2 = nn.Conv(self.width, kernel_size=(1,))(x)
+            x = x1 + x2
+            x = nn.gelu(x)
+        return x
+
+
+class FNOBlock2D(nn.Module):
+    """
+    A single FNO block consisting of spectral convolution and pointwise convolution.
+    """
+    width: int = 32 # Width of the hidden layers，typically the number of hidden features
+    depth: int = 4
+    modes1: int = 16  # Number of Fourier modes in the first dimension
+    modes2: int = None  # Number of Fourier modes in the second dimension, if applicable
+
+    @nn.compact
+    def __call__(self, x):
+        for _ in range(self.depth):
+            x1 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)(x)
+            x2 = nn.Conv(self.width, kernel_size=(1,1))(x)
+            x = x1 + x2
+            x = nn.gelu(x)
+        return x
+
+
+
 
 
 

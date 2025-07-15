@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from src.fno_vmc_nk.ansatz.fno_jax import FNO2d
+from src.fno_vmc_nk.ansatz.fno_jax import FNO2d, FNO1d
 from flax import linen as nn
 
 class FNOAnsatzFlax(nn.Module):
@@ -25,9 +25,9 @@ class FNOAnsatzFlax(nn.Module):
         # apply FNO (expects NHWC)
         modes2 = self.modes2 or 1
 
-        u = FNO2d(modes1=self.modes1, modes2=modes2, width=self.width)(u)
+        u = FNO1d(modes1=self.modes1, modes2=modes2, width=self.width)(u)
         u = nn.tanh(u)
-        u = FNO2d(modes1=self.modes1, modes2=self.modes2, width=self.width)(u)
+        u = FNO1d(modes1=self.modes1, modes2=self.modes2, width=self.width)(u)
 
         # global average pooling over spatial dims
         features = jnp.mean(u, axis=(1,2))  # shape (batch, width)
