@@ -367,6 +367,7 @@ class VMCTrainer:
         bm = _np.array(block_means)
         mean_e = float(bm.mean())
         stderr = float(bm.std(ddof=1) / _np.sqrt(len(bm)))
+        variance = float(bm.var(ddof=1))
 
         print(
             f"\n=== Inference estimate: ⟨E⟩ = {mean_e:.6f} ± {stderr:.6f} ===")
@@ -378,6 +379,7 @@ class VMCTrainer:
             self.logger.log({
                 "inference/energy_mean": mean_e,
                 "inference/energy_stderr": stderr,
+                "inference/energy_variance": variance,
                 "inference/relative_error": relative_error
             })
         print(">>>>> VMCTrainer.estimate() 执行结束")
