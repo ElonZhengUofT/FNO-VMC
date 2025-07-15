@@ -165,7 +165,7 @@ class VMCTrainer:
             )
             print(">>> Using SR preconditioner")
             precond = MARCH(
-                qgt= QGTAuto()
+                qgt= QGTAuto(),
                 # QFTOnTheFly() or QGTAuto()
                 diag_shift=diag_schedule,
                 solver=functools.partial(
