@@ -10,7 +10,7 @@ class MARCH(LinearPreconditioner):
                  lambda_reg=1e-4,
                  solver=jax.scipy.sparse.linalg.cg):
         # 让 QGTAuto 负责构造 Fisher 矩阵 S
-        super().__init__(solver)
+        super().__init__(self.lhs_constructor,solver)
         self.diag_shift = diag_shift
         self.beta       = beta
         self.mu         = mu

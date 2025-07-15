@@ -8,7 +8,39 @@ from netket.experimental.models import Slater2nd
 from netket.nn.masked_linear import default_kernel_init
 from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
+from src.fno_vmc_nk.ansatz.fno_jax import FNO2d
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
+
+class PE(nn.Module):
+    """
+    Position Embedding module for FNO.
+    Maps input coordinates to a higher-dimensional space.
+    """
+    dim: int = 2
+    hidden_features: int = 64
+
+    @nn.compact
+    def __call__(self, x):
+        # x shape: (batch, n_features)
+        # output shape: (batch, n_features, width)
+        return nn.Dense(self.hidden_features, kernel_init=nn.initializers.normal(1e-2))(x)
+
+class Lifting(nn.Module):
+    """
+    Lifting module for FNO.
+    Maps input features to a higher-dimensional space.
+    """
+    hidden_features: int = 64
+
+    @nn.compact
+    def __call__(self, x):
+        # x shape: (batch, n_features)
+        # output shape: (batch, n_features, width)
+        return nn.Dense(self.hidden_features, kernel_init=nn.initializers.normal(1e-2))(x)
+
+
+
+
 
 
 # region MultiDetSlaterNNBackflow
