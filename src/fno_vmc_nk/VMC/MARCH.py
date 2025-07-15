@@ -1,6 +1,6 @@
 import functools
 from collections.abc import Callable
-\import jax
+import jax
 import jax.numpy as jnp
 
 from netket.vqs import VariationalState
