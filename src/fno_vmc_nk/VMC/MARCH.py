@@ -1,5 +1,6 @@
 from netket.optimizer import LinearPreconditioner
 from netket.vqs import VariationalState
+import jax
 
 class MARCH(LinearPreconditioner):
     def __init__(self,
