@@ -28,6 +28,9 @@ class MARCH(AbstractLinearPreconditioner, mutable=True):
     qgt_constructor: Callable = struct.static_field(default=None)
     qgt_kwargs: dict     = struct.field(serialize=False, default=None)
 
+    prev_delta: any = struct.field(pytree_node=False)
+    V: any = struct.field(pytree_node=False)
+
     def __init__(
         self,
         qgt: Callable | None = None,
