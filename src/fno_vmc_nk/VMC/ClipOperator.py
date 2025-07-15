@@ -1,7 +1,6 @@
 import jax.numpy as jnp
 import netket as nk
 from netket.operator import LocalOperator
-import netket.experimental as nkx
 from nkx.operator import (
     ParticleNumberAndSpinConservingFermioperator2nd
 )
