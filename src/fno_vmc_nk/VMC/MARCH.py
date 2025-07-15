@@ -1,7 +1,7 @@
-from netket.optimizer import AbstractLinearPreconditioner
+from netket.optimizer import LinearPreconditioner
 from netket.vqs import VariationalState
 
-class MARCH(AbstractLinearPreconditioner):
+class MARCH(LinearPreconditioner):
     def __init__(self,
                  diag_shift=1e-3,
                  beta=0.99,
