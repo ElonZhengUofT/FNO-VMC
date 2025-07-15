@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import flax.linen as nn
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
-from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
+# from src.fno_vmc_nk.ansatz.tn_model import TNAnsatz
 from src.fno_vmc_nk.ansatz.SlaterFNO import SlaterFNOFlax, SlaterDetFlax
 from src.fno_vmc_nk.ansatz.BackflowFNO import NNBackflowSlater2nd
 import netket as nk
