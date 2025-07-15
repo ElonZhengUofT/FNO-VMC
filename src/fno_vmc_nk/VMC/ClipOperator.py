@@ -1,6 +1,10 @@
 import jax.numpy as jnp
 import netket as nk
 from netket.operator import LocalOperator
+import netket.experimental as nkx
+from nkx.operator import (
+    ParticleNumberAndSpinConservingFermioperator2nd
+)
 
 class ClippedLocalOperator(LocalOperator):
     def __init__(self, base_op: LocalOperator, graph, threshold):

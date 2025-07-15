@@ -153,13 +153,6 @@ class VMCTrainer:
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
             opt = nk.optimizer.Adam(learning_rate=lr_schedule)
 
-        if vmc_params.get('clip energy', True):
-            print(">>> Using energy clipping")
-            hamiltonian = ClippedLocalOperator(
-                hamiltonian,
-                graph=graph,
-                threshold=lambda mean, std: 5.0
-            )
 
         if vmc_params.get('sr', False):
             diag_schedule = optax.exponential_decay(
@@ -368,6 +361,7 @@ class VMCTrainer:
             block_means.append(m)
             if log:
                 print(f"[Estimate] block {i + 1}/{n_blocks} mean = {m:.6f}")
+                print(f"[Estimate] block {i + 1}/{n_blocks} variance = {stats.variance.real:.6f}")
 
         # 计算总体均值和标准误
         bm = _np.array(block_means)
