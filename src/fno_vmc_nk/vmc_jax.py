@@ -12,6 +12,7 @@ import functools
 import jax.scipy.sparse.linalg as jsp
 from netket.optimizer.qgt import QGTAuto,QGTOnTheFly
 import netket.experimental as nkx
+from netket.optimizer import SR, LinearPreconditioner
 from src.fno_vmc_nk.VMC.MARCH import MARCH
 # from nkx.driver import VMC_SRt
 from flax.core.frozen_dict import freeze, unfreeze
@@ -163,6 +164,7 @@ class VMCTrainer:
                 end_value=1e-4  # 可选：下限
             )
             print(">>> Using SR preconditioner")
+            precond = nk.optimizer.SR(
             precond = MARCH(
                 # qgt= QGTOnTheFly(),
                 # QFTOnTheFly() or QGTAuto()
@@ -221,7 +223,6 @@ class VMCTrainer:
         #         self._new_diag = 1e-4  # New diagonal shift for SR optimizer after switch_at
 
         # Record the initial parameters
-        #region Log Initial Parameters
         if self.logger is not None:
             base = {
                 "phase": self.phase,

@@ -1,60 +1,107 @@
-from netket.optimizer import LinearPreconditioner
-from netket.vqs import VariationalState
-import jax
+import functools
+from collections.abc import Callable
+\import jax
+import jax.numpy as jnp
 
-class MARCH(LinearPreconditioner):
-    def __init__(self,
-                 diag_shift=1e-3,
-                 beta=0.99,
-                 mu=0.9,
-                 lambda_reg=1e-4,
-                 solver=jax.scipy.sparse.linalg.cg):
-        # 让 QGTAuto 负责构造 Fisher 矩阵 S
-        super().__init__(self.lhs_constructor,solver)
+from netket.vqs import VariationalState
+from netket.utils.types import Scalar, ScalarOrSchedule
+from netket.utils import struct
+from netket.optimizer.preconditioner import AbstractLinearPreconditioner
+from netket.optimizer.qgt import QGTAuto
+
+class MARCH(AbstractLinearPreconditioner, mutable=True):
+    r"""
+    Moment-Adaptive ReConfiguration Heuristic (MARCH) preconditioner.
+
+    This combines natural-gradient SR with Adam-style first/second moment adaptation.
+    """
+    # SR regularization
+    diag_shift: ScalarOrSchedule = struct.field(serialize=False, default=1e-3)
+    # Adaptive second-moment decay
+    beta: float = struct.field(serialize=False, default=0.9)
+    # Momentum coefficient
+    mu: float = struct.field(serialize=False, default=0.9)
+    # Additional ridge term inside SR solve
+    lambda_reg: float = struct.field(serialize=False, default=1e-4)
+
+    # QGT constructor args
+    qgt_constructor: Callable = struct.static_field(default=None)
+    qgt_kwargs: dict     = struct.field(serialize=False, default=None)
+
+    def __init__(
+        self,
+        qgt: Callable | None = None,
+        solver: Callable = jax.scipy.sparse.linalg.cg,
+        *,
+        diag_shift: ScalarOrSchedule = 1e-3,
+        beta: float = 0.9,
+        mu: float = 0.9,
+        lambda_reg: float = 1e-4,
+        solver_restart: bool = False,
+        **kwargs,
+    ):
+        if qgt is None:
+            qgt = QGTAuto(solver)
         self.diag_shift = diag_shift
         self.beta       = beta
         self.mu         = mu
         self.lambda_reg = lambda_reg
-        # 用来存 history
-        self.phi = None
-        self.V   = None
+        self.qgt_constructor = qgt
+        self.qgt_kwargs      = kwargs
+        # history placeholders
+        self.prev_delta = None
+        self.V           = None
 
-    def lhs_constructor(self, vstate: VariationalState, step=None):
-        # 就和 SR 一样，让 QGTAuto 用 diag_shift 构建 S + shift·I
-        return QGTAuto(vstate, diag_shift=self.diag_shift)
+        super().__init__(solver, solver_restart=solver_restart)
 
-    def apply(self, vstate: VariationalState, grad, step=None):
-        # 1) 用 vstate 得到 O (jacobian) 和 local-energy 中心化后的 ε
-        O    = vstate.jacobian()    #  shape (n_samples, n_params)
-        eps  = vstate.local_energy_centered()  # shape (n_samples,)
+    def lhs_constructor(self, vstate: VariationalState, step: int | None = None):
+        # mirror SR: build QGT operator S + diag_shift*I
+        diag = self.diag_shift(step) if callable(self.diag_shift) else self.diag_shift
+        return self.qgt_constructor(vstate, diag_shift=diag, **self.qgt_kwargs)
 
-        # 2) 初始化 phi, V
-        if self.phi is None:
-            self.phi = jax.tree_map(jnp.zeros_like, grad)
-            self.V   = jax.tree_map(lambda g: jnp.ones_like(g),   grad)
+    def apply(self, vstate: VariationalState, grad, step: int | None = None):
+        # Flatten gradient pytree to vector
+        flat_grad, unravel = jax.flatten_util.ravel_pytree(grad)
+        n = flat_grad.shape[0]
 
-        # 3) 计算新的动量和平滑量
-        phi_new = jax.tree_map(lambda p: self.mu*p, self.phi)
-        delta   = phi_new  # 为了写差分
-        # 注意：真正的 delta_t-1 应该存上一次更新，不过简单起见可用 phi
-        diff    = jax.tree_map(lambda d,p: d-p, grad, phi_new)
-        V_new   = jax.tree_map(lambda v,d: self.beta*v + (1-self.beta)*d**2,
-                              self.V, diff)
+        # Initialize history on first call
+        if self.prev_delta is None:
+            self.prev_delta = jnp.zeros(n)
+            self.V           = jnp.ones(n)
 
-        # 4) 构造 adaptive 缩放 D⁻¹ = diag(V_new)^{-1/4}
-        D14_inv = jax.tree_map(lambda v: v**(-0.25), V_new)
+        # Momentum term from previous delta
+        phi = self.mu * self.prev_delta
 
-        # 5) 解正规方程：(O D^{-2} Oᵀ + λI) y = ε - O φ
-        #    然后 δθ = D^{-1} Oᵀ y + φ
-        #    下面是个简化示例，大小参数少时可以 to_dense
-        O_scaled = O * jnp.stack([D14_inv]*O.shape[0], axis=0)
-        A        = O_scaled @ O_scaled.T + self.lambda_reg * jnp.eye(O.shape[0])
-        rhs      = eps - (O @ phi_new)
-        y        = jnp.linalg.solve(A, rhs)
-        update   = (O_scaled.T @ y) * D14_inv + phi_new
+        # Build scaled metric preconditioner: D = diag(V)^{1/4}
+        D_inv = self.V ** (-0.25)
 
-        # 6) 保存 history
-        self.phi = phi_new
-        self.V   = V_new
+        # Construct QGT operator
+        qgt = self.lhs_constructor(vstate, step)
+        # Define matvec for (D^{-1} S D^{-1} + lambda_reg I)
+        def matvec(x):
+            # x is flat vector
+            y = D_inv * qgt.matvec(D_inv * x)
+            return y + self.lambda_reg * x
+        linop = jax.scipy.sparse.linalg.LinearOperator((n, n), matvec=matvec)
 
-        return update
+        # Solve linear system: (..) * y = flat_grad - phi
+        rhs = flat_grad - phi
+        y, _ = self.solver(linop, rhs)
+
+        # Compute new delta
+        delta = D_inv * y + phi
+
+        # Update second moment: V = beta V + (1-beta)*(delta - prev_delta)^2
+        diff     = delta - self.prev_delta
+        self.V   = self.beta * self.V + (1 - self.beta) * (diff ** 2)
+        # Store new delta
+        self.prev_delta = delta
+
+        # Unflatten back to pytree and return
+        return unravel(delta)
+
+    def __repr__(self):
+        return (
+            f"{type(self).__name__}(diag_shift={self.diag_shift}, beta={self.beta}, "
+            f"mu={self.mu}, lambda_reg={self.lambda_reg})"
+        )
