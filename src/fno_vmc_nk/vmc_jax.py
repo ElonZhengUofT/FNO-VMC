@@ -164,9 +164,8 @@ class VMCTrainer:
                 end_value=1e-4  # 可选：下限
             )
             print(">>> Using SR preconditioner")
-            precond = nk.optimizer.SR(
             precond = MARCH(
-                # qgt= QGTOnTheFly(),
+                qgt= QGTAuto()
                 # QFTOnTheFly() or QGTAuto()
                 diag_shift=diag_schedule,
                 solver=functools.partial(
