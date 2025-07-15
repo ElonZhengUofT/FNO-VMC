@@ -12,7 +12,7 @@ import functools
 import jax.scipy.sparse.linalg as jsp
 from netket.optimizer.qgt import QGTAuto,QGTOnTheFly
 import netket.experimental as nkx
-from src.fno_vmc_nk.VMC.ClipOperator import ClippedLocalOperator
+from src.fno_vmc_nk.VMC.MARCH import MARCH
 # from nkx.driver import VMC_SRt
 from flax.core.frozen_dict import freeze, unfreeze
 
@@ -163,8 +163,8 @@ class VMCTrainer:
                 end_value=1e-4  # 可选：下限
             )
             print(">>> Using SR preconditioner")
-            precond = nk.optimizer.SR(
-                qgt= QGTOnTheFly(),
+            precond = nk.optimizer.MARCH(
+                # qgt= QGTOnTheFly(),
                 # QFTOnTheFly() or QGTAuto()
                 diag_shift=diag_schedule,
                 solver=functools.partial(
