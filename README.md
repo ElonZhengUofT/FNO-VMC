@@ -65,6 +65,7 @@ We validate FNO-VMC on benchmark models:
 ## Citation
 If you use FNO-VMC in your research, please cite:
 ```
+placeholder
 @article{YourName2025FNOVMC,
   title={Fourier Neural Operators as Variational Ansatz in Monte Carlo Simulations},
   author={Zheng, Shizhao and Collaborators},
@@ -72,6 +73,7 @@ If you use FNO-VMC in your research, please cite:
   year={2025},
   arxiv={2405.00001}
 }
+placeholder
 ```
 
 ## Contributing
