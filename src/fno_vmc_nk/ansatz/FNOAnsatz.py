@@ -8,22 +8,94 @@ from netket.experimental.models import Slater2nd
 from netket.nn.masked_linear import default_kernel_init
 from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
-from src.fno_vmc_nk.ansatz.fno_jax import SpectralConv2d，SpectralConv1d
+from src.fno_vmc_nk.ansatz.fno_jax import SpectralConv2d, SpectralConv1d
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 
-class PE(nn.Module):
+#region Basic Utils
+def f_reshape(x,dim, channel=2):
+    """
+    Netket samples x are flattened, (M, (2*spin+1)*n_sites) for spin=1/2.
+    So we need to reshape them back to a grid format.
+    In 1D, it becomes (M, L, 1, channel)
+    in 2D, it becomes (M, L, L, channel)
+    axis=0 is batch, axis=1 is sites for length, axis=2 is height (1 for 1D),
+    axis=3 is channel.
+    """
+    batch, features = x.shape[0], x.shape[-1]
+    if dim == 1:
+        L = features // channel
+        u = x.reshape(batch, L, 1, self.channel)
+    if dim == 2:
+        L = int((features / channel) ** 0.5)
+        u = x.reshape(batch, L, L, self.channel)
+    return u
+
+
+def k_reshape(x, K=1):
+    """
+    Reshape from (B,L_x,L_y,DK) to (B,K, L_x,L_y,D)
+    """
+    batch, Lx, Ly, C = x.shape
+    D = C // K
+    u = x.reshape(batch, K, Lx, Ly, D)
+
+
+def flatten(x, channel=2):
+    """
+    Reshape from (B,K,L_x,L_y,2D) to (B,K, 2L_x*L_y,D) for femions
+    """
+    batch, K, Lx, Ly, D = x.shape
+    u = x.reshape(batch, K, channel * Lx * Ly, D // channel)
+    return u
+
+
+def index_encoding(batch, N_e: int, beta=0):
+    """
+    Generate power positional encoding for N_e positions with exponent beta.
+    The shape is  (B, N_e)
+    """
+    idx = jnp.arange(1, N_e + 1)
+    idx = idx * (1.0 / N_e) ** beta
+    idx = jnp.broadcast_to(idx, (batch, N_e))  # (B, Ne)
+    return idx
+
+
+def
+
+
+def InnerProduct(context, index):
+    # context: (B, K, N, P)
+    # index:   (B, K, Ne, P)
+    out = jnp.einsum('bknp,bkmp->bknm', context, index)  # (B, K, N, Ne)
+    return out
+
+
+#endregion
+
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+
+#region Basic Blocks
+class Projector(nn.Module):
     """
     Position Embedding module for FNO.
     Maps input coordinates to a higher-dimensional space.
     """
     dim: int = 2
-    hidden_features: int = 64
+    hidden_features: int = 32
 
     @nn.compact
     def __call__(self, x):
         # x shape: (batch, n_features)
         # output shape: (batch, n_features, width)
-        return nn.Dense(self.hidden_features, kernel_init=nn.initializers.normal(1e-2))(x)
+        return nn.Dense(
+            self.hidden_features,
+            kernel_init=nn.initializers.normal(1e-2))(x)
 
 class Lifting(nn.Module):
     """
@@ -31,12 +103,17 @@ class Lifting(nn.Module):
     Maps input features to a higher-dimensional space.
     """
     hidden_features: int = 32
+    # n_layers: int = 2 Maybe just 2 first
 
     @nn.compact
     def __call__(self, x):
         # x shape: (batch, n_features)
         # output shape: (batch, n_features, width)
-        return nn.Dense(self.hidden_features, kernel_init=nn.initializers.normal(1e-2))(x)
+        x = nn.Dense(self.hidden_features,
+                     kernel_init=nn.initializers.normal(1e-2))(x)
+        x = nn.gelu(x)
+        x = nn.Dense(self.hidden_features,
+                        kernel_init=nn.initializers.normal(1e-2))(x)
 
 
 class FNOBlock1D(nn.Module):
@@ -76,191 +153,200 @@ class FNOBlock2D(nn.Module):
         return x
 
 
+class ContextEncoder(nn.Module):
+    """Context encoder module for FNO"""
+    p_feature: int = 64
+    num_layers: int = 2
+
+    @nn.compact
+    def __call__(self, x):
+        # x shape: (B, K, N, D)
+        for _ in range(self.num_layers - 1):
+            x = nn.Dense(self.p_feature,
+                         kernel_init=nn.initializers.normal(1e-2))(x)
+            x = nn.gelu(x)
+        x = nn.Dense(self.p_feature,
+                     kernel_init=nn.initializers.normal(1e-2))(x)
+        return x  # (B, K, N, P)
 
 
-
-
-
-
-
-# region MultiDetSlaterNNBackflow
-class MultiDetSlaterNNBackflow(nn.Module):
+class IndexDecoder(nn.Module):
     """
-    Multi-determinant Ansatz combining Slater2nd base and NN-backflow correction.
-    Wavefunction: psi(n) = sum_{k=1}^K coeffs[k] * det[ M_base_k + FNO_k(n) ]
+    f：把 (context, index) -> per-electron weight
+    j_vec(index):   (B, K, Ne, P)
+    context: (B, K, N, P)
+    输出:    (B, K, N, Ne)
     """
-    hilbert: nk.hilbert.SpinOrbitalFermions
+    hidden_dim:     int   # MLP hidden dimension
+
+    @nn.compact
+    def __call__(self, index, context):
+        """
+        context: (B, K, N, P)
+        j_vec:   (B, K, Ne,P)
+        returns: (B, K, N, Ne)
+        """
+        B, K, N, P = context.shape
+        Ne = index.shape[-2]
+
+
+        # 1) index (B, K, Ne, P) -> (B, K, N, Ne, P) embedding to P
+        je = jnp.broadcast_to(je, (B, K, N, Ne, P))  # (B, K, N, Ne, P)
+
+
+        # 2) 广播到 (B, K, N, Ne, P)
+        #   - context 从 (B,K,N,P) -> (B,K,N,1,P) -> broadcast
+        ctx = context[..., None, :]                  # (B, K, N, 1, P)
+        ctx = jnp.broadcast_to(ctx, (B, K, N, Ne, P))
+        # 3) 拼接 (B,K,N,Ne,2P)
+        x = jnp.concatenate([ctx, je], axis=-1)
+
+        # 4) 两层 MLP -> (B,K,N,Ne,1) -> squeeze -> (B,K,N,Ne)
+        x = nn.Dense(self.hidden_dim)(x)
+        x = nn.gelu(x)
+        x = nn.Dense(1)(x)
+        return x.squeeze(-1)  # (B, K, N, Ne)
+#endregion
+
+# second-order Ansatz with FNO backflow
+class NProcessor(nn.Module):
+    """
+    (B, 2N) -> (B, Lx, Ly, 2) -P-> (B, Lx, Ly, D) -FNO-> (B, Lx, Ly, D) -lifting
+    -> (B, Lx, Ly, 2DK) -flatten-> (B, K, 2N, D)
+    """
+    D: int = 32
     K: int = 4
-    hidden_units: int = 64
-    general: bool = True
-    restrict: bool = True
-    kernel_init: NNInitFunc = default_kernel_init
-    param_dtype: DType = float
-    # FNO params
-    dim: int = 2
-    modes1: int = 4
+
+    dim: int = 1
+    modes1: int = 8
     modes2: int = None
-    width: int = 32
-    channel: int = 1
+    channel: int = 2  # input channel, 2 for spin up/down
 
-    def setup(self):
-        # Create K Slater blocks
-        self.slater = [ Slater2nd(
-                hilbert=self.hilbert,
-                generalized=self.general,
-                restricted=self.restrict,
-                kernel_init=self.kernel_init,
-                param_dtype=self.param_dtype,
-            ) for _ in range(self.K)
-        ]
-        # Per-block FNO backflow
-        self.fnos = [ FNOAnsatzFlax(
-                dim=self.dim,
-                modes1=self.modes1,
-                modes2=self.modes2,
-                width=self.width,
-                channel=self.channel,
-                out_dim=np.prod(self.slater[0].orbitals.shape),
-            ) for _ in range(self.K)
-        ]
-        # learnable coefficients
-        self.log_coeffs = self.param('log_coeffs', nn.initializers.zeros, (self.K,), self.param_dtype)
-
+    @nn.compact
     def __call__(self, n):
-        # ensure boolean occupancy
-        if not jnp.issubdtype(n.dtype, jnp.integer):
-            n = jnp.isclose(n, 1)
+        B, N_orbital = n.shape
 
-        def single_logpsi(n_sample):
-            terms = []
-            for k in range(self.K):
-                M_base = self.slater[k].orbitals  # (nsites, nup+ndown)
-                F_flat = self.fnos[k](n_sample)   # (nsites*(nup+ndown),)
-                F = F_flat.reshape(M_base.shape)
-                M = M_base + F
-                # select occupied rows
-                R = jnp.nonzero(n_sample, size=self.hilbert.n_fermions)[0]
-                A = M[R, :]
-                logdet = nkjax.logdet_cmplx(A)
-                terms.append(logdet + self.log_coeffs[k])
-            # log-sum-exp to combine
-            return jax.scipy.special.logsumexp(jnp.stack(terms))
+        u = f_reshape(n, self.dim, self.channel)  # (B, Lx, Ly, 2)
 
-        if n.ndim == 1:
-            return single_logpsi(n)
-        else:
-            return jax.vmap(single_logpsi)(n)
+        # 1) Positional Encoding
+        PE = Projector(self.dim, self.P)(u)  # (B, Lx, Ly, P)
+        u = Projector(self.dim, self.P)(u)  # (B, Lx, Ly, P)
+        u = PE + u  # (B, Lx, Ly, P)
+
+        # 2) FNO
+        if dim == 1:
+            u = FNOBlock1D(modes=self.modes1, width=self.D)(u)  # (B, Lx, 1, D)
+        elif dim == 2:
+            u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
+
+        # 3) Lifting
+        u = Lifting(self.channel * self.D* self.K)(u)  # (B, Lx, Ly, 2DK)
+        u = nn.tanh(u)
+        u = k_reshape(u, self.K)  # (B, K, Lx, Ly, 2D)
+        u = flatten(u, self.channel)  # (B, K, 2N, D)
+        return u  # (B, K, 2N, D)
+
+
+class NeProcessor(nn.Module):
+    """
+    Process Ne information to generate index encoding.
+    From (B, Ne) to (B, Ne, P)
+    """
+    P: int = 32
+    K: int = 4
+
+    @nn.compact
+    def __call__(self, index):
+        B, Ne = index.shape
+        index = index.reshape(B, Ne, 1)  # (B, Ne, 1)
+
+        #) Embedding to P
+        index = Projector(1, self.P)(index)
+        index = nn.tanh(index)
+        index = FNOBlock1D(modes=8, width=self.P)(index)  # (B, Ne, P)
+
+        #) Lifting to (B, Ne, PK)
+        index = nn.Dense(self.P * self.K)(index)
+        index = k_reshape(index, self.K)  # (B, K, Ne, P)
+        return index  # (B, K, Ne, P)
+
+
 #endregion
 
 
-#region MultiDetNNBackflowPure
-class MultiDetNNBackflowPure(nn.Module):
+# region Ansatz Base
+class AnsatzI(nn.Module):
     """
-    Multi-determinant Ansatz using only NN backflow (no base Slater orbitals).
-    psi(n) = sum_k coeffs[k] * det[ FNO_k(n) ]
-    Each FNO outputs full orbitals.
+    Combine Nprocessor and Naive Ne index encoding to form a Slater Matrix
+    NProcessor will output (B, K, 2N, D)
+    Then build Naive Ne index encoding
     """
-    hilbert: nk.hilbert.SpinOrbitalFermions
+    D: int = 32
+    P: int = 32
     K: int = 4
-    # FNO parameters
-    dim: int = 2
-    modes1: int = 4
+
+    dim: int = 1
+    modes1: int = 8
     modes2: int = None
-    width: int = 32
-    channel: int = 1
+    channel: int = 2  # input channel, 2 for spin up/down
 
     def setup(self):
-        nsites, nferm = self.hilbert.n_orbitals * 2, sum(self.hilbert.n_fermions_per_spin)
-        self.fnos = [ FNOAnsatzFlax(
-                dim=self.dim,
-                modes1=self.modes1,
-                modes2=self.modes2,
-                width=self.width,
-                channel=self.channel,
-                out_dim=nsites * nferm,
-            ) for _ in range(self.K)
-        ]
-        self.log_coeffs = self.param('log_coeffs', nn.initializers.zeros, (self.K,), jnp.float64)
+        self.nprocessor = NProcessor(
+            D=self.D, K=self.K,
+            dim=self.dim, modes1=self.modes1, modes2=self.modes2, channel=self.channel
+        )
+        self.neprocessor = NeProcessor(P=self.P, K=self.K)
+        self.context_encoder = ContextEncoder(p_feature=self.P)
+        self.index_decoder = IndexDecoder(hidden_dim=self.P)
 
+    @nn.compact
     def __call__(self, n):
-        if not jnp.issubdtype(n.dtype, jnp.integer):
-            n = jnp.isclose(n, 1)
+        B, N_orbital = n.shape
 
-        def single_logpsi(n_sample):
-            terms = []
-            for k in range(self.K):
-                F_flat = self.fnos[k](n_sample)
-                M = F_flat.reshape((self.hilbert.n_sites, self.hilbert.n_fermions))
-                R = jnp.nonzero(n_sample, size=self.hilbert.n_fermions)[0]
-                A = M[R, :]
-                logdet = nkjax.logdet_cmplx(A)
-                terms.append(logdet + self.log_coeffs[k])
-            return jax.scipy.special.logsumexp(jnp.stack(terms))
+        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
 
-        if n.ndim == 1:
-            return single_logpsi(n)
-        else:
-            return jax.vmap(single_logpsi)(n)
-#endregion
+        Y = self.nprocessor(n)  # (B, K, 2N, D)
+
+        context = self.context_encoder(n)  # (B,K, 2N, P)
+        index = self.neprocessor(index_encoding(B, Ne, beta=0))  # (B, K, Ne, P)
+
+        orbitals = self.index_decoder(index, context)  # (B, K, 2N, Ne)
+        return orbitals  # (B, K, 2N, Ne)
 
 
-#region MultiDetSingleFNO
-class MultiDetSingleFNO(nn.Module):
+class AnsatzIII(nn.Module):
     """
-    Multi-determinant Ansatz with a single FNO generating K determinants' orbitals.
-    psi(n) = sum_{k=1..K} exp(log_coeffs[k]) * det[ M_k(n) ],
-    where each M_k(n) is extracted from one combined FNO output.
-    """
-    hilbert: nk.hilbert.SpinOrbitalFermions
+     Combine Nprocessor and Naive Ne index encoding to form a Slater Matrix
+     Use Index Mapping to combine,
+     Then build Naive Ne index encoding
+     """
+    D: int = 32
     K: int = 4
-    # FNO parameters
-    dim: int = 2
-    modes1: int = 4
+
+    dim: int = 1
+    modes1: int = 8
     modes2: int = None
-    width: int = 32
-    channel: int = 1
+    channel: int = 2  # input channel, 2 for spin up/down
 
     def setup(self):
-        nsites = self.hilbert.n_sites
-        nferm = sum(self.hilbert.n_fermions_per_spin)
-        # Single FNO outputs K * (nsites * nferm) entries
-        self.fno = FNOAnsatzFlax(
-            dim=self.dim,
-            modes1=self.modes1,
-            modes2=self.modes2,
-            width=self.width,
-            channel=self.channel,
-            out_dim=self.K * nsites * nferm,
+        self.nprocessor = NProcessor(
+            D=self.D, K=self.K,
+            dim=self.dim, modes1=self.modes1, modes2=self.modes2,
+            channel=self.channel
         )
-        # learnable log coefficients
-        self.log_coeffs = self.param(
-            'log_coeffs', nn.initializers.zeros, (self.K,), jnp.float64
-        )
+        self.neprocessor = NeProcessor(P=self.D, K=self.K)
+        self.index_decoder = IndexDecoder(hidden_dim=self.D)
 
+    @nn.compact
     def __call__(self, n):
-        # ensure boolean occupancy
-        if not jnp.issubdtype(n.dtype, jnp.integer):
-            n = jnp.isclose(n, 1)
+        B, N_orbital = n.shape
 
-        def single_logpsi(n_sample):
-            # F_all shape: (K * nsites * nferm,)
-            F_all = self.fno(n_sample)
-            # split into K blocks
-            parts = jnp.split(F_all, self.K)
-            log_terms = []
-            # get occupied indices
-            R = jnp.nonzero(n_sample, size=self.hilbert.n_fermions)[0]
-            for k, part in enumerate(parts):
-                # reshape to orbital matrix
-                M = part.reshape((self.hilbert.n_sites, self.hilbert.n_fermions))
-                A = M[R, :]  # pick occupied rows
-                logdet = nkjax.logdet_cmplx(A)
-                log_terms.append(logdet + self.log_coeffs[k])
-            # combine via logsumexp
-            return jax.scipy.special.logsumexp(jnp.stack(log_terms))
+        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
 
-        if n.ndim == 1:
-            return single_logpsi(n)
-        else:
-            return jax.vmap(single_logpsi)(n)
+        Y = self.nprocessor(n)  # (B, K, 2N, D)
+
+        index = self.neprocessor(index_encoding(B, Ne, beta=0))  # (B, K, Ne, D)
+
+        orbitals = InnerProduct(context, index) + self.index_decoder(index, Y)  # (B, K, 2N, Ne)
+        return orbitals  # (B, K, 2N, Ne)
 #endregion

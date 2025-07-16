@@ -57,7 +57,7 @@ class NNBackflowSlater2nd(nn.Module):
             modes2=self.modes2,
             width=self.width,
             channel=self.channel,
-            out_dim=self.total_size,  # 输出维度为总扁平长度
+            out_dim=self.total_size,
         )
 
     def __call__(self, n):
