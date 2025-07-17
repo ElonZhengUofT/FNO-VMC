@@ -10,6 +10,8 @@ from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 
+
+#region Vanilla and FNO Backflow on Slater2nd
 class NNBackflowSlater2nd(nn.Module):
     """
     在 Slater2nd 基础上加入 NN-backflow:
@@ -220,25 +222,89 @@ class NNBackflowMLP(nn.Module):
                 logdets.append(jax.vmap(single_logdet, in_axes=(0, 0))(ni, Fi))
             # 最后拼回整个 batch
             return jnp.concatenate(logdets, axis=0)
+#endregion
+
+
+#region BackflowI and BackflowII
+class BackflowI(nn.Module):
+    """
+    Backflow I:
+    M_mod = M_base + F(n),
+    where F(n) is given by a neural network of shape (B, K, n_orbitals, n_fermions).
+    """
+    hilbert: nk.hilbert.SpinOrbitalFermions
+    base_orbitals: jnp.ndarray       # shape (K, n_orbitals, n_fermions)
+    backflow_fn: nn.Module          # nn.Module mapping n -> (B, K, n_orbitals, n_fermions)
+
+    def __call__(self, n):
+        # Ensure binary occupancy (0/1) integer vector
+        if not jnp.issubdtype(n.dtype, jnp.integer):
+            n = jnp.where(n > 0.5, 1, 0).astype(jnp.int32)
+        # Compute backflow correction F: (B, K, n_orbitals, n_fermions)
+        F = self.backflow_fn(n.astype(jnp.float32))
+        # Broadcast base_orbitals to batch: (B, K, n_orbitals, n_fermions)
+        M_base = jnp.expand_dims(self.base_orbitals, axis=0)
+        M_mod = M_base + F
+
+        # Number of electrons
+        n_fermions = self.hilbert.n_fermions
+
+        def sample_logdets(n_sample, M_mod_sample):
+            # Extract occupied row indices
+            R = jnp.nonzero(n_sample, size=n_fermions, fill_value=0)[0]
+            # Compute logdet for each Slater determinant k
+            def logdet_k(Mk):
+                A = Mk[R, :]  # shape (n_fermions, n_fermions)
+                return nkjax.logdet_cmplx(A)
+            return jax.vmap(logdet_k)(M_mod_sample)  # shape (K,)
+
+        # Handle single-sample or batch inputs
+        if n.ndim == 1:
+            return sample_logdets(n, M_mod[0])       # (K,)
+        else:
+            return jax.vmap(sample_logdets)(n, M_mod)  # (B, K)
+
 
 class BackflowII(nn.Module):
     """
-    This Backflow module takes M as slater matrix, where
-    M is a neural network matrix, whose shape is (B,K, 2N, Ne),
-    The final wavefuntion has K of Slater determinants.
+    Backflow II:
+    M_mod = M_base * (1 + F(n) * N^a),
+    where F(n) has shape (B, K, n_orbitals, n_fermions),
+    and a is a hyperparameter exponent.
     """
+    hilbert: nk.hilbert.SpinOrbitalFermions
+    base_orbitals: jnp.ndarray       # shape (K, n_orbitals, n_fermions)
+    backflow_fn: nn.Module          # nn.Module mapping n -> (B, K, n_orbitals, n_fermions)
+    a: float                        # exponent hyperparameter
 
+    def __call__(self, n):
+        # Ensure binary occupancy
+        if not jnp.issubdtype(n.dtype, jnp.integer):
+            n = jnp.where(n > 0.5, 1, 0).astype(jnp.int32)
+        # Backflow output F
+        F = self.backflow_fn(n.astype(jnp.float32))
+        # Number of spatial sites (assumed from hilbert.n_orbitals for SpinOrbitalFermions)
+        N_sites = self.hilbert.n_orbitals // 2
+        # Modulation factor (B, K, n_orbitals, n_fermions)
+        modulation = 1.0 + F * (N_sites ** self.a)
+        # Broadcast base_orbitals and apply modulation
+        M_base = jnp.expand_dims(self.base_orbitals, axis=0)
+        M_mod = M_base * modulation
 
-class BackflowII(nn.Module):
-    """
-    This Backflow module takes SL(1+M*N^a) where SL is Slater determinant orbitals,
-    M is a neural network matrix, whose shape is (B,K, 2N, Ne), and a is a hyperparameter.
-    N is the number of sites, Ne is the number of electrons.
-    """
-# —— 使用示例 ——
-# hi = SpinOrbitalFermions(...); graph = ...
+        # Number of electrons
+        n_fermions = self.hilbert.n_fermions
 
-if __name__ == "__main__":
-    pass
+        def sample_logdets(n_sample, M_mod_sample):
+            R = jnp.nonzero(n_sample, size=n_fermions, fill_value=0)[0]
+            def logdet_k(Mk):
+                A = Mk[R, :]
+                return nkjax.logdet_cmplx(A)
+            return jax.vmap(logdet_k)(M_mod_sample)
+
+        if n.ndim == 1:
+            return sample_logdets(n, M_mod[0])
+        else:
+            return jax.vmap(sample_logdets)(n, M_mod)
+#endregion
 
 

@@ -397,14 +397,16 @@ class VMCTrainer:
         """
         冻结当前模型参数，采样 n_samples 个配置 (丢弃 burn_in)，
         并针对每个配置计算 Slater orbitals 矩阵 M(n)，最后保存到 .npz。
+        Freeze the current model parameters, sample n_samples configurations (discard burn_in),
+        and calculate the Slater orbitals matrix M(n) for each configuration, and finally save it to .npz.
         """
         # 1) Reset sampler & discard热身
         self.vstate.n_discard_per_chain = burn_in
+        self.vstate.n_samples = n_samples
         self.vstate.reset()
 
         # 2) 采样 n_samples 配置
-        self.vstate.n_samples = n_samples
-        samples = self.vstate.sample(n_samples)  # shape (n_samples, 2*N_sites)
+        samples = self.vstate.sample()  # shape (n_samples, 2*N_sites)
 
         # 3) 用当前 Slater ansatz 计算 M(n)
         #    假设 self.vstate.model.apply 返回 shape (2*N_sites, N_e)
