@@ -35,7 +35,7 @@ def pretrain_generate(size=16):
     # parser.add_argument("--config", type=str, required=True,
                         # help="Path to YAML config file.")
     parser.add_argument("--outdir", type=str, default="results",
-                        # help="Directory to save outputs (default: results)")
+                        help="Directory to save outputs (default: results)")
     # parser.add_argument("--logfile", type=str, default=None,
                         # help="Optional file to log training output")
     parser.add_argument("--wandb_project", type=str, default="FNO-VMC",
