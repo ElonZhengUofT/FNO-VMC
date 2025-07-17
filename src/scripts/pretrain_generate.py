@@ -66,8 +66,8 @@ def pretrain_generate(size=16):
 
     wandb.config.update(cfg, allow_val_change=True)
 
-    artifact = wandb.Artifact(f"{args.ansatz}_config", type="config")
-    artifact.add_file(args.config)
+    artifact = wandb.Artifact(f"config_fno_{size}", type="config")
+    artifact.add_file(config_path)
     wandb.log_artifact(artifact)
 
     # build Hamiltonian
