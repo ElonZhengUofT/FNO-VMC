@@ -224,5 +224,6 @@ class NNBackflowMLP(nn.Module):
 # hi = SpinOrbitalFermions(...); graph = ...
 
 if __name__ == "__main__":
+    pass
 
 
