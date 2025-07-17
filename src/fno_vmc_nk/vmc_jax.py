@@ -421,7 +421,7 @@ class VMCTrainer:
         M_all = jax.vmap(_get_M)(samples)  # (n_samples, 2N_sites, N_e)
 
         # 4) 保存到磁盘
-        _np.savez_compressed(
+        np.savez_compressed(
             out_path,
             samples=_np.array(samples),
             M_all=_np.array(M_all),
