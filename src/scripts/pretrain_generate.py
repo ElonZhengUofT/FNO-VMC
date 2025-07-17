@@ -60,7 +60,9 @@ def pretrain_generate(size=16):
         project = args.wandb_project,
         config = cfg,
         name = f"Slater_pretrain_fno_{size}",
-        sync_tensorboard = False
+        sync_tensorboard = False,
+        reinit = True,
+        resume=False
     )
     wandb.watch_callable = lambda m: wandb.watch(m, log="all", log_freq=50)
 
@@ -139,6 +141,7 @@ def pretrain_generate(size=16):
     trainer.dump_orbitals_dataset(out_path=os.path.join(args.outdir, f"orbitals_dataset_fno_{size}.npz"))
 
     # Save the model parameters and upload to wan
+    wandb.finish()
     print("Training finished.")
 
 
