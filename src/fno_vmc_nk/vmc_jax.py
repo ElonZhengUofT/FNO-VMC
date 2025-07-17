@@ -423,7 +423,7 @@ class VMCTrainer:
         # 4) 保存到磁盘
         np.savez_compressed(
             out_path,
-            samples=_np.array(samples),
+            samples=np.array(samples),
             M_all=_np.array(M_all),
         )
         print(f"Saved slater dataset → {out_path}")
