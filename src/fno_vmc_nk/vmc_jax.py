@@ -413,10 +413,10 @@ class VMCTrainer:
         slater_apply = self.vstate.model.apply
         params = self.vstate.parameters
 
-        # jit + vmap 提速
+        # jit + vmap
         @jax.jit
         def _get_M(n):
-            return slater_apply(params, n)
+            return slater_apply({"params": params}, n)
 
         M_all = jax.vmap(_get_M)(samples)  # (n_samples, 2N_sites, N_e)
 
