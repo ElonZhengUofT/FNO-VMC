@@ -56,11 +56,8 @@ def index_encoding(batch, N_e: int, beta=0):
     """
     idx = jnp.arange(1, N_e + 1)
     idx = idx * (1.0 / N_e) ** beta
-    idx = jnp.broadcast_to(idx, (batch, N_e))  # (B, Ne)
+    idx = jnp.broadcast_to(idx, (batch, N_e, 1))  # (B, Ne)
     return idx
-
-
-def
 
 
 def InnerProduct(context, index):
@@ -257,8 +254,8 @@ class NeProcessor(nn.Module):
 
     @nn.compact
     def __call__(self, index):
-        B, Ne = index.shape
-        index = index.reshape(B, Ne, 1)  # (B, Ne, 1)
+        B, Ne, L = index.shape
+        index = index.reshape(B, Ne, L)  # (B, Ne, 1)
 
         #) Embedding to P
         index = Projector(1, self.P)(index)
@@ -269,6 +266,58 @@ class NeProcessor(nn.Module):
         index = nn.Dense(self.P * self.K)(index)
         index = k_reshape(index, self.K)  # (B, K, Ne, P)
         return index  # (B, K, Ne, P)
+
+
+class PositionalEmbedding(nn.Module):
+    dim: int = 1 # spatial dimension
+    Lx: int=16  # lattice x-dimension
+    Ly: int=1  # lattice y-dimension
+    embed_dim: int = 32  # output embedding dimension
+
+    @nn.compact
+    def __call__(self, n):
+        """
+        Args:
+            n: (B, 2N) occupation vector, site-major flattened, spin-major last.
+        Returns:
+            embeddings: (B, Ne, embed_dim)
+        """
+        B, _ = n.shape
+        N_sites = self.Lx * self.Ly
+
+        occ_mask = n.astype(bool)
+        Ne = jnp.sum(occ_mask, axis=-1)  # (B,)
+
+        def extract_pos(n_sample):
+            # For single sample: n_sample shape (2N,)
+            idx = jnp.nonzero(n_sample, size=N_sites * 2, fill_value=-1)[
+                0]  # pad with -1
+            idx = idx[idx >= 0]  # filter valid ones
+            return idx
+
+        occ_indices = jax.vmap(extract_pos)(n)  # Ragged list: (B, <=2N)
+
+        # Decode idx into (x, y, σ) or (site, σ)
+        def decode(idx):
+            site = idx // 2  # site index (0 ~ N-1)
+            spin = idx % 2  # 0: up, 1: down
+            if dim == 2:
+                x = site % self.Lx
+                y = site // self.Lx
+                return jnp.stack([x, y, spin], axis=-1)  # shape (..., 3)
+            return jnp.stack([site, spin], axis=-1)  # shape (..., 2)
+
+        positions = jax.vmap(lambda ids: jax.vmap(decode)(ids))(
+            occ_indices)  # (B, Ne, 3) or (B, Ne, 2)
+
+        positions = positions.astype(jnp.float32)
+        positions = positions.at[..., 0].set(positions[..., 0] / (self.Lx - 1))
+        positions = positions.at[..., 1].set(positions[..., 1] / (self.Ly - 1))
+
+        # 5️⃣ Lift to embedding dim
+        emb = nn.Dense(self.embed_dim)(positions)  # (B, Ne, embed_dim)
+        emb = nn.gelu(emb)
+        return emb
 
 
 #endregion
@@ -314,6 +363,46 @@ class AnsatzI(nn.Module):
         return orbitals  # (B, K, 2N, Ne)
 
 
+class AnsatzII(nn.Module):
+    """
+     Combine Nprocessor and Naive Ne index encoding to form a Slater Matrix
+     Use Inner Product to combine,
+     Then build Naive Ne index encoding
+     """
+    D: int = 32
+    P: int = 32
+    K: int = 4
+
+    dim: int = 1
+    modes1: int = 8
+    modes2: int = None
+    channel: int = 2  # input channel, 2 for spin up/down
+
+    def setup(self):
+        self.nprocessor = NProcessor(
+            D=self.D, K=self.K,
+            dim=self.dim, modes1=self.modes1, modes2=self.modes2,
+            channel=self.channel
+        )
+        self.neprocessor = PostionEmbedding(P=self.P, K=self.K)
+        self.context_encoder = ContextEncoder(p_feature=self.P)
+        self.index_decoder = IndexDecoder(hidden_dim=self.P)
+
+    @nn.compact
+    def __call__(self, n):
+        B, N_orbital = n.shape
+
+        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
+
+        Y = self.nprocessor(n)  # (B, K, 2N, D)
+
+        context = self.context_encoder(Y)  # (B,K, 2N, P)
+        index = self.neprocessor(n)  # (B, K, Ne, P)
+
+        orbitals = InnerProduct(context, index) + self.index_decoder(index, context)  # (B, K, 2N, Ne)
+        return orbitals  # (B, K, 2N, Ne)
+
+
 class AnsatzIII(nn.Module):
     """
      Combine Nprocessor and Naive Ne index encoding to form a Slater Matrix
@@ -349,4 +438,5 @@ class AnsatzIII(nn.Module):
 
         orbitals = InnerProduct(context, index) + self.index_decoder(index, Y)  # (B, K, 2N, Ne)
         return orbitals  # (B, K, 2N, Ne)
+
 #endregion

@@ -16,7 +16,7 @@ class FNO2d(nn.Module):
         # Fourier 层 + 点wise 卷积
         for _ in range(self.depth):
             x1 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)(x)
-            x2 = nn.Conv(self.width, kernel_size=(1,1))(x)
+            x2 = nn.Conv(self.width, kernel_size=(zhe1,1))(x)
             x = x1 + x2
             x = nn.gelu(x)
 

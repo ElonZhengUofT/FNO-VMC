@@ -1,1 +1,12 @@
 2025-7-11 n_sample, sweep_size, n_chian, n_chian_per_rank, chunk_size的意义和关系是什么
+
+2025-7-16 FNO里做的变换是当FFT完后，选定基底e^ikx,然后进行对向量F_1,k,....F_D,k的线性变换，然后得到F_1,k,....F_C,k，最后对每个基底都做这个，然后rfft
+那么，1. 对特征的变换能不能加激活（引入非线性），效果会怎么样.  思考结果:phase-preserving amplitude nonlinearity（PPAN）兴许有用
+     2. 能不能固定特性维度，在在傅立叶基底张成的空间上做线性变换，效果会怎么样
+     效果会不会被破坏，最主要看平移等变性会不会被破坏
+     思考结果：只有diagonal matrix才不会破坏平移等变性，也就是mode-wise的线性变换才不会破坏平移等变性
+     那么只用mode-wise scaling而不用 mode-wise linear transform会怎么样，降低计算成本，效果能提升吗
+     3. 能不能固定特性维度，在在傅立叶基底张成的空间上，让本来系数是0的基底具有非0系数，最后让irfft后的N变大，效果会怎么样
+
+
+2025-7-16 问chuwei为什么不在fno里升D为KD

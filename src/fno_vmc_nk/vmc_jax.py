@@ -386,5 +386,46 @@ class VMCTrainer:
 
         return mean_e, stderr
     #endregion
+
+    # region Save samples-psi pair
+    def dump_orbitals_dataset(
+            self,
+            n_samples: int = 4096+500,
+            burn_in: int = 500,
+            out_path: str = "pretrain_dataset/slater_dataset.npz"
+    ):
+        """
+        冻结当前模型参数，采样 n_samples 个配置 (丢弃 burn_in)，
+        并针对每个配置计算 Slater orbitals 矩阵 M(n)，最后保存到 .npz。
+        """
+        # 1) Reset sampler & discard热身
+        self.vstate.n_discard_per_chain = burn_in
+        self.vstate.reset()
+
+        # 2) 采样 n_samples 配置
+        self.vstate.n_samples = n_samples
+        samples = self.vstate.sample(n_samples)  # shape (n_samples, 2*N_sites)
+
+        # 3) 用当前 Slater ansatz 计算 M(n)
+        #    假设 self.vstate.model.apply 返回 shape (2*N_sites, N_e)
+        slater_apply = self.vstate.model.apply
+        params = self.vstate.parameters
+
+        # jit + vmap 提速
+        @jax.jit
+        def _get_M(n):
+            return slater_apply(params, n)
+
+        M_all = jax.vmap(_get_M)(samples)  # (n_samples, 2N_sites, N_e)
+
+        # 4) 保存到磁盘
+        _np.savez_compressed(
+            out_path,
+            samples=_np.array(samples),
+            M_all=_np.array(M_all),
+        )
+        print(f"Saved slater dataset → {out_path}")
+        return samples, M_all
+    #endregion
 #endregion
 
