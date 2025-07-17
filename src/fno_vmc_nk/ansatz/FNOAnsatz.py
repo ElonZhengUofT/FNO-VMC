@@ -445,4 +445,5 @@ class AnsatzIV(nn.Module):
     A trivial ansatz that abandoned backflow structure
     """
 
+
 #endregion

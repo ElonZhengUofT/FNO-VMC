@@ -220,6 +220,21 @@ class NNBackflowMLP(nn.Module):
                 logdets.append(jax.vmap(single_logdet, in_axes=(0, 0))(ni, Fi))
             # 最后拼回整个 batch
             return jnp.concatenate(logdets, axis=0)
+
+class BackflowII(nn.Module):
+    """
+    This Backflow module takes M as slater matrix, where
+    M is a neural network matrix, whose shape is (B,K, 2N, Ne),
+    The final wavefuntion has K of Slater determinants.
+    """
+
+
+class BackflowII(nn.Module):
+    """
+    This Backflow module takes SL(1+M*N^a) where SL is Slater determinant orbitals,
+    M is a neural network matrix, whose shape is (B,K, 2N, Ne), and a is a hyperparameter.
+    N is the number of sites, Ne is the number of electrons.
+    """
 # —— 使用示例 ——
 # hi = SpinOrbitalFermions(...); graph = ...
 

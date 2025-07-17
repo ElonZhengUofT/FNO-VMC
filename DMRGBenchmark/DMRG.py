@@ -12,10 +12,10 @@ driver.initialize_system(n_sites=L, n_elec=N, spin=TWOSZ)
 b = driver.expr_builder()
 
 # 一些任意的 CD 项（示例）
-b.add_term("CD", np.array([[1, 3]]), 0.7)
-b.add_term("CD", np.array([[3, 1]]), 0.6)
-b.add_term("CD", np.array([[2, 2]]), 0.5)
-b.add_term("CD", np.array([[2, 4]]), 0.4)
+b.add_term("CD", [[1, 3]], 0.7)
+b.add_term("CD", [[3, 1]], 0.6)
+b.add_term("CD", [[2, 2]], 0.5)
+b.add_term("CD", [[2, 4]], 0.4)
 
 t = 1.0
 U = 4.0
