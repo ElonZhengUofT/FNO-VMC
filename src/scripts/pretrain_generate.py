@@ -59,7 +59,7 @@ def pretrain_generate(size=16):
     wandb.init(
         project = args.wandb_project,
         config = cfg,
-        name = f"{args.ansatz}-{os.path.basename(args.config)}",
+        name = f"Slater_pretrain_fno_{size}",
         sync_tensorboard = False
     )
     wandb.watch_callable = lambda m: wandb.watch(m, log="all", log_freq=50)
