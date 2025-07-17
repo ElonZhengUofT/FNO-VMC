@@ -127,7 +127,7 @@ class VMCTrainer:
         elif phase == 2:
             lr = float(vmc_params.get("lr", 5e-4))
             lr_schedule = optax.exponential_decay(
-                init_value=1e-2
+                init_value=1e-2,
                 transition_steps=decay_steps,
                 decay_rate=decay_rate,
                 staircase=True,  # 如果 False 就是连续衰减；True 每 decay_steps 衰减一次
