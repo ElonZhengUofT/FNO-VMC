@@ -391,7 +391,7 @@ class VMCTrainer:
     def dump_orbitals_dataset(
             self,
             n_samples: int = 4096+1024,
-            burn_in: int = 1024
+            burn_in: int = 1024,
             out_path: str = "pretrain_dataset/slater_dataset.npz"
     ):
         """
