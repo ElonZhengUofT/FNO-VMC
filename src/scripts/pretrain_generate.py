@@ -147,8 +147,6 @@ def pretrain_generate(size=16):
 
 
 if __name__ == '__main__':
-    pretrain_generate(size=16)
-    pretrain_generate(size=20)
     pretrain_generate(size=24)
     pretrain_generate(size=32)
     pretrain_generate(size=64)
