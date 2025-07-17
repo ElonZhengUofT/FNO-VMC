@@ -439,4 +439,10 @@ class AnsatzIII(nn.Module):
         orbitals = InnerProduct(context, index) + self.index_decoder(index, Y)  # (B, K, 2N, Ne)
         return orbitals  # (B, K, 2N, Ne)
 
+
+class AnsatzIV(nn.Module):
+    """
+    A trivial ansatz that abandoned backflow structure
+    """
+
 #endregion

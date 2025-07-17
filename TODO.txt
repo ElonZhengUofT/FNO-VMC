@@ -6,5 +6,6 @@
 2025-7-14 依次测试Adam，SR-ADAM 在 越来越大 ansatz上的variance 收敛情况
 2025-7-14 测试MultiDet (单FNO，多FNO）*（Orb+FNO，pureFNO）
 
+2025-7-16 DMRG原理
 
 pretrain
