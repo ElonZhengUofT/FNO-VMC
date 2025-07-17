@@ -48,7 +48,7 @@ def pretrain_generate(size=16):
     # configure logging
     logfile_path = "logs/fno_run.log"
     set_logger(logfile=logfile_path)
-    logging.info(Starting training: ansatz={"Slater"}, config={f'./configs_pretrain/one_dim_hubbard_fno_{size}.yaml'})
+    logging.info(f"Starting training: ansatz= Slater, config=./configs_pretrain/one_dim_hubbard_fno_{size}.yaml")
 
     # load configuration
     config_path = f'./configs_pretrain/one_dim_hubbard_fno_{size}.yaml'
