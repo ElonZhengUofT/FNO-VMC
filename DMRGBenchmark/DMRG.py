@@ -56,7 +56,7 @@ def run_dmrg(driver, mpo, max_bond=250):
 if __name__ == "__main__":
     t = 1.0
     U = 4.0
-    sizes = [16, 20, 24, 32, 64, 128, 256]
+    sizes = [64]
 
     results = {}
     for L in sizes:
