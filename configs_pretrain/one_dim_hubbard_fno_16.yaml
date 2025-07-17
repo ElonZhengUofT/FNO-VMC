@@ -22,7 +22,7 @@ vmc:
   n_samples: 4096 # 8192     # Number of samples for VMC
   lr: 5e-4            # Learning rate for the optimizer
   sr: False            # Whether to use stochastic reconfiguration
-  n_iter: 5000         # Number of iterations for VMC
+  n_iter: 1000         # Number of iterations for VMC
   init_state: random  # Initial state for the wave function, can be 'random' or 'ground_state'
   GS: -11.7480  # Ground state energy for reference
 
