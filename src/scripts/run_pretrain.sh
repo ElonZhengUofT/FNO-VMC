@@ -10,7 +10,8 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
   # export XLA_FLAGS=--xla_gpu_enable_command_buffer=false
 
   python -m src.scripts.pretrain_generate \
-    --outdir pretrain_dataset
+    --outdir pretrain_dataset \
+    --logfile logs/fno_run.log
 
 EOF
 

@@ -14,7 +14,7 @@ ssh -X shizhao@131.215.142.161 << 'EOF'
   python -m src.scripts.train \
     --ansatz backflow \
     --config configs/one_dim_hubbard_fno_16.yaml \
-    --outdir resul/fno_run \
+    --outdir result/fno_run \
     --logfile logs/fno_run.log
 
   # （可选）把 prof.out 打包一下方便下载
