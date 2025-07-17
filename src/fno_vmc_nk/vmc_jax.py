@@ -424,7 +424,7 @@ class VMCTrainer:
         np.savez_compressed(
             out_path,
             samples=np.array(samples),
-            M_all=_np.array(M_all),
+            M_all=np.array(M_all),
         )
         print(f"Saved slater dataset → {out_path}")
         return samples, M_all
