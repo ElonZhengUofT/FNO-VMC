@@ -446,4 +446,11 @@ class AnsatzIV(nn.Module):
     """
 
 
+class AnsatzV(nn.Module):
+    """
+    A trivial ansatz that abandoned backflow structure
+    Refference: Autoregressive
+    """
+
+
 #endregion

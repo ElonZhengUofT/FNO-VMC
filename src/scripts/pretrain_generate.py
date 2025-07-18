@@ -28,6 +28,13 @@ XLA_FLAGS="--xla_gpu_autotune_level=2"
 # jax.config.update("jax_enable_x64", True)
 
 
+def save_flax_params(variables, path):
+    """把 Flax 的参数树序列化成二进制，然后写文件。"""
+    param_bytes = to_bytes(variables)
+    with open(path, "wb") as f:
+        f.write(param_bytes)
+    print(f"Saved parameters to {path}")
+
 def pretrain_generate(size=16):
     parser = argparse.ArgumentParser(description="Train VMC with different ansatz and models")
     # parser.add_argument("--ansatz", choices=["fno", "tn", "SlaterFNO", "RBM", "Slater", "backflow"], required=True,
@@ -137,8 +144,11 @@ def pretrain_generate(size=16):
     )
     trainer.run(out=os.path.join(args.outdir, "phase2"),
                  logfile=args.logfile)
-    trainer.estimate()
-    trainer.dump_orbitals_dataset(out_path=os.path.join(args.outdir, f"orbitals_dataset_fno_{size}.npz"))
+    # trainer.estimate()
+    # trainer.dump_orbitals_dataset(out_path=os.path.join(args.outdir, f"orbitals_dataset_fno_{size}.npz"))
+    print("Training completed, saving model parameters...")
+    variables = unfreeze(trainer.vstate.variables)
+    save_flax_params(variables, os.path.join(args.outdir, f"fno_slater_pretrain_{size}.flax"))
 
     # Save the model parameters and upload to wan
     wandb.finish()
