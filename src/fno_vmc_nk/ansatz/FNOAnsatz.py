@@ -450,7 +450,56 @@ class AnsatzV(nn.Module):
     """
     A trivial ansatz that abandoned backflow structure
     Refference: Autoregressive
+    It starts from (B,2N) -> (B,N,2) -> (B,2N,D) -FNO-> (B,2N,D) -> (B,N,4)
+    -softmax-> (B,N,4)
+    Then for each site, add log probability
     """
+    num_sites: int
+    d_model: int = 64
+    modes: int = 16
+    depth: int = 4
+
+    def setup(self):
+        # Embedding from 2 channels (up/down) to d_model features
+        self.embed = nn.Dense(self.d_model)
+        # Stack of FNO blocks
+        self.blocks = [FNO1dBlock(self.d_model, self.modes) for _ in
+                       range(self.depth)]
+        # Final projection to 4 logits per site
+        self.project = nn.Dense(4)
+
+    def __call__(self, occ):
+        # occ: (B, 2*N) binary occupancy
+        B = occ.shape[0]
+        # reshape to (B, N, 2)
+        x = occ.reshape(B, self.num_sites, 2)
+        # embed: (B, N, d_model)
+        x = self.embed(x)
+        # prepare for FNO: (B, d_model, N)
+        x = jnp.transpose(x, (0, 2, 1))
+        # apply FNO blocks
+        for block in self.blocks:
+            x = block(x)
+        # back to (B, N, d_model)
+        x = jnp.transpose(x, (0, 2, 1))
+        # project to logits: (B, N, 4)
+        logits = self.project(x)
+        # convert to log-probabilities along last axis
+        log_probs = nn.log_softmax(logits)
+        return log_probs
+
+    def log_probability(self, occ):
+        # Compute total log-probability of each configuration
+        log_probs = self.__call__(occ)  # (B, N, 4)
+        # Derive state indices from occupancy
+        up = occ[:, : self.num_sites]
+        down = occ[:, self.num_sites:]
+        state_idx = up + 2 * down  # (B, N)
+        # Gather log-probabilities for actual states
+        lp = jnp.take_along_axis(log_probs, state_idx[..., None],
+                                 axis=-1).squeeze(-1)
+        # Sum over sites -> (B,)
+        return jnp.sum(lp, axis=1)
 
 
 #endregion

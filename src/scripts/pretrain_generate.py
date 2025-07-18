@@ -15,6 +15,7 @@ import jax
 import time
 import optax
 import flax
+from flax.serialization import to_bytes
 from flax.core.frozen_dict import freeze, unfreeze
 
 GROUND_STATES = {(2,7): -20.35, (4,7):-17.664, (4,8): -13.768,
