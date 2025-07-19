@@ -12,7 +12,7 @@ ssh belle << 'EOF'
   export XLA_FLAGS="--xla_gpu_autotune_level=2"
   export XLA_PYTHON_CLIENT_MEM_FRACTION=0.7
 
-  python -m src.scripts.pretrain_generate \
+  python3 -m src.scripts.pretrain_generate \
     --outdir pretrain_dataset \
     --logfile logs/fno_run.log
 EOF
