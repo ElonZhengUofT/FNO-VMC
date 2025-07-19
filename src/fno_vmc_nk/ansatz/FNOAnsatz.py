@@ -266,11 +266,11 @@ class NeProcessor(nn.Module):
         index = nn.tanh(index)
         x4d = index[..., None, :]  # (B, Ne, 1, P)
         x4d = FNOBlock1D(modes=8, width=self.P)(x4d)  # (B, Ne, 1, P)
-        index = x4d.squeeze(axis=2)  # (B, Ne, P)
 
-        #) Lifting to (B, Ne, PK)
-        index = nn.Dense(self.P * self.K)(index)
-        index = k_reshape(index, self.K)  # (B, K, Ne, P)
+        #) Lifting to (B, Ne, 1, P*K)
+        x4d = nn.Dense(self.P * self.K)(x4d)
+        x4d = k_reshape(index, self.K)  # (B, K, Ne,1 P)
+        index = x4d.squeeze(-2)  # (B, K, Ne, P)
         return index  # (B, K, Ne, P)
 
 
