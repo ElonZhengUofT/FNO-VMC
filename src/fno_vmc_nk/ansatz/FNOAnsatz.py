@@ -356,11 +356,12 @@ class AnsatzI(nn.Module):
         B, N_orbital = n.shape
 
         Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
+        Num_Ne = int(Ne[0])  # assume all batch have same Ne
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 
         context = self.context_encoder(n)  # (B,K, 2N, P)
-        index = self.neprocessor(index_encoding(B, Ne, beta=0))  # (B, K, Ne, P)
+        index = self.neprocessor(index_encoding(B, Num_Ne, beta=0))  # (B, K, Ne, P)
 
         orbitals = self.index_decoder(index, context)  # (B, K, 2N, Ne)
         return orbitals  # (B, K, 2N, Ne)
