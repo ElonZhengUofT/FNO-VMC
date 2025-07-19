@@ -99,7 +99,7 @@ def TFS(size=16):
     #     )
     rng = jax.random.PRNGKey(0)
     dummy_input = ...  # 一个能让 Slater2nd.apply 跑通的样本
-    template_A = netket.models.Slater(
+    template_A = nk.models.Slater(
         hilbert=hilbert,
         generalized=True,
         restricted=True,
