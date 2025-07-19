@@ -337,6 +337,7 @@ class AnsatzI(nn.Module):
     NProcessor will output (B, K, 2N, D)
     Then build Naive Ne index encoding
     """
+    hilbert: nk.hilbert.SpinOrbitalFermions
     D: int = 32
     P: int = 32
     K: int = 4
@@ -359,8 +360,7 @@ class AnsatzI(nn.Module):
     def __call__(self, n):
         B, N_orbital = n.shape
 
-        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
-        Num_Ne = int(Ne[0])  # assume all batch have same Ne
+        Num_Ne = hilbert.n_fermions
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 

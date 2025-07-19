@@ -116,7 +116,7 @@ def TFS(size=16):
     loaded_A = from_bytes(template_A, param_bytes)
 
     rng2 = jax.random.PRNGKey(1)
-    matrix = AnsatzI()
+    matrix = AnsatzI(hilbert=hilbert)
     model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
     variables = model.init(rng2, dummy_input)
 
