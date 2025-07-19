@@ -253,7 +253,9 @@ class NProcessor(nn.Module):
 
         # 2) FNO
         if self.dim == 1:
-            u = FNOBlock1D(modes=self.modes1, width=self.D)(u)  # (B, Lx, 1, D)
+            u3d = jnp.squeeze(u, axis=2)  # (B, Lx, D)
+            u = FNOBlock1D(modes=self.modes1, width=self.D)(u3d)  # (B, Lx, D)
+            u = u[:, :, None, :]  # (B, Lx, 1, D)
         elif self.dim == 2:
             u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
 
