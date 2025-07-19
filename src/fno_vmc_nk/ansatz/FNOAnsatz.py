@@ -227,6 +227,7 @@ class NProcessor(nn.Module):
 
         # 1) Positional Encoding
         PE = Projector(self.dim, self.D)(u)  # (B, Lx, Ly, D)
+
         u = Projector(self.dim, self.D)(u)  # (B, Lx, Ly, D)
         u = PE + u  # (B, Lx, Ly, P)
 
