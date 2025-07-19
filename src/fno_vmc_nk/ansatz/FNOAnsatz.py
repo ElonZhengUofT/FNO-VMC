@@ -200,7 +200,7 @@ class IndexDecoder(nn.Module):
         ctx = context[..., None, :]                  # (B, K, N, 1, P)
         ctx = jnp.broadcast_to(ctx, (B, K, N, Ne, P))
         # 3) 拼接 (B,K,N,Ne,2P)
-        x = jnp.concatenate([ctx, je], axis=-1)
+        x = jnp.concatenate([ctx, index], axis=-1)
 
         # 4) 两层 MLP -> (B,K,N,Ne,1) -> squeeze -> (B,K,N,Ne)
         x = nn.Dense(self.hidden_dim)(x)
