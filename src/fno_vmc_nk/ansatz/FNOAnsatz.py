@@ -252,12 +252,7 @@ class NProcessor(nn.Module):
         u = PE + u  # (B, Lx, Ly, P)
 
         # 2) FNO
-        if self.dim == 1:
-            u3d = jnp.squeeze(u, axis=2)  # (B, Lx, D)
-            u = FNOBlock1D(modes=self.modes1, width=self.D)(u3d)  # (B, Lx, D)
-            u = u[:, :, None, :]  # (B, Lx, 1, D)
-        elif self.dim == 2:
-            u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
+        u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
 
         # 3) Lifting
         u = Lifting(self.channel * self.D* self.K)(u)  # (B, Lx, Ly, 2DK)
