@@ -277,9 +277,9 @@ class BackflowII(nn.Module):
     Wavefunction ψ(n) = ∑ₖ det[M_modₖ(n)].
     """
     hilbert: nk.hilbert.SpinOrbitalFermions
+    backflow_fn: nn.Module  # maps n -> (*shapes) or flattened total_size
     generalized: bool = True
     restricted: bool = True
-    backflow_fn: nn.Module        # maps n -> (*shapes) or flattened total_size
     a: float = 0.0                # exponent hyperparameter
 
     def setup(self):
