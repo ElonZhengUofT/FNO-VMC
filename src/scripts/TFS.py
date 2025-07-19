@@ -99,7 +99,7 @@ def TFS(size=16):
     #     )
     matrix = AnsatzI()
     model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
-    slater_variables = load_flax_params(f"./pretrain_results/fno_slater_pretrain_{size}.flax")
+    slater_variables = load_flax_params(f"./pretrain_dataset/fno_slater_pretrain_{size}.flax")
 
     rng = jax.random.PRNGKey(0)
     dummy_state = hilbert.random_state(shots=1)  # 或者你常用的任何输入格式
