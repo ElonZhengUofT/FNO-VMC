@@ -115,6 +115,7 @@ def TFS(size=16):
 
     loaded_A = from_bytes(template_A, param_bytes)
 
+
     rng2 = jax.random.PRNGKey(1)
     matrix = AnsatzI(hilbert=hilbert)
     model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
@@ -127,6 +128,17 @@ def TFS(size=16):
     params = cfg["hamiltonian"]["params"]
     ground_state = cfg.get("vmc", {}).get("GS", None)
     print(f"Using ground state energy: {ground_state}")
+
+    model = nk.models.Slater2nd(
+        hilbert=hilbert,
+        generalized=True,
+        restricted=True,
+    )
+    variables = model.init(rng2, dummy_input)
+
+    full = unfreeze(variables)
+    full['params'] = loaded_A['params']
+    merged = freeze(full)
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
