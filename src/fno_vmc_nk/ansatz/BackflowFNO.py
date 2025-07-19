@@ -302,6 +302,7 @@ class BackflowII(nn.Module):
 
         # 3) 如果直接输出了 (B, K, rows, cols)，那么直接广播相乘
         if F_out.ndim == 4:
+            print("Using direct (B,K,rows,cols) backflow output.")
             # F_out: (B, K, rows, cols)
             N_sites = self.hilbert.n_orbitals // 2
             mod = 1.0 + F_out * (N_sites ** self.a)     # (B, K, rows, cols)
