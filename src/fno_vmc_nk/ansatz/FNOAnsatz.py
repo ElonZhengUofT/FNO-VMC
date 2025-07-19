@@ -358,12 +358,12 @@ class AnsatzI(nn.Module):
     Then build Naive Ne index encoding
     """
     hilbert: nk.hilbert.SpinOrbitalFermions
-    D: int = 32
+    D: int = 64
     P: int = 32
     K: int = 4
 
     dim: int = 1
-    modes1: int = 8
+    modes1: int = 16
     modes2: int = None
     channel: int = 2  # input channel, 2 for spin up/down
 
