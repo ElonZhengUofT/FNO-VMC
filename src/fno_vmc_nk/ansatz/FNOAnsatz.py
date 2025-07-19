@@ -269,7 +269,7 @@ class NeProcessor(nn.Module):
 
         #) Lifting to (B, Ne, 1, P*K)
         x4d = nn.Dense(self.P * self.K)(x4d)
-        x4d = k_reshape(index, self.K)  # (B, K, Ne,1 P)
+        x4d = k_reshape(x4d, self.K)  # (B, K, Ne,1 P)
         index = x4d.squeeze(-2)  # (B, K, Ne, P)
         return index  # (B, K, Ne, P)
 
