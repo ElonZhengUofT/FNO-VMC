@@ -307,7 +307,7 @@ class BackflowII(nn.Module):
             mod = 1.0 + F_out * (N_sites ** self.a)     # (B, K, rows, cols)
             M_base = self.slater.orbitals               # (rows, cols)
             # 广播到 (B, K, rows, cols)
-            M_mod_all = M_base * mod
+            M_mod_all = M_base
 
         else:
             # 回退到原 flatten–split–reshape 逻辑
