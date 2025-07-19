@@ -57,6 +57,7 @@ def index_encoding(batch, N_e: int, beta=0):
     """
     idx = jnp.arange(1, N_e + 1)
     idx = idx * (1.0 / N_e) ** beta
+    idx = idx[None, :, None]
     idx = jnp.broadcast_to(idx, (batch, N_e, 1))  # (B, Ne)
     return idx
 
