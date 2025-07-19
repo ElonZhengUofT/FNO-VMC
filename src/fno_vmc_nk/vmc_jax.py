@@ -47,14 +47,7 @@ class VMCTrainer:
         chunk_size = vmc_params.get('n_samples', 1000) // self.split_batches
         print(f"chunk_size = {chunk_size}, split_batches = {self.split_batches}")
 
-        if phase == 1:
-            sampler = nk.sampler.MetropolisLocal(
-                hilbert,
-                n_chains_per_rank=64,
-                sweep_size=1,
-            )
-        else:
-            sampler = nk.sampler.MetropolisFermionHop(
+        sampler = nk.sampler.MetropolisFermionHop(
                 hilbert=hilbert,  # 必须
                 graph=graph,  # 通常必须（除非 cluster 覆盖）
                 d_max=1,  # 可选，默认=1
@@ -148,7 +141,7 @@ class VMCTrainer:
             opt = transform
             print(">>> Phase 2 optimizer: only BACKFLOW")
         else:
-            lr = float(vmc_params.get("lr", 5e-3)) * 0.1  # 降低学习率
+            lr = float(vmc_params.get("lr", 5e-3))  # 降低学习率
             lr_schedule = optax.exponential_decay(
                 init_value=lr,
                 transition_steps=decay_steps,
@@ -157,7 +150,7 @@ class VMCTrainer:
                 end_value=1e-4  # 可选：下限
             )
                 # jax_opt = optax.adam(learning_rate=vmc_params.get("lr", 1e-3))
-            opt = nk.optimizer.Adam(learning_rate=lr_schedule)
+            opt = optax.adamw(learning_rate=lr_schedule)
 
 
         if vmc_params.get('sr', False):
