@@ -118,9 +118,9 @@ def TFS(size=16):
     rng2 = jax.random.PRNGKey(1)
     matrix = AnsatzI()
     model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
-    model.init(rng2, dummy_input)
+    variables = model.init(rng2, dummy_input)
 
-    full = unfreeze(model)
+    full = unfreeze(variables)
     full['params']['slater'] = loaded_A['params']
     merged = freeze(full)
 
