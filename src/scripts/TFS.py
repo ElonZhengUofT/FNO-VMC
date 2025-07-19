@@ -98,7 +98,7 @@ def TFS(size=16):
     #         **cfg.get("model_params", {})
     #     )
     matrix = AnsatzI()
-    model = BackflowII(hilbert=hilbert,backflow_fn=matrx)
+    model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
     slater_variables = load_flax_params(f"./pretrain_results/fno_slater_pretrain_{size}.flax")
 
     rng = jax.random.PRNGKey(0)
