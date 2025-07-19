@@ -308,12 +308,11 @@ class BackflowII(nn.Module):
         # 1) Compute backflow output
         F_out = self.backflow_fn(n.astype(jnp.float32))
         #  - If output has same rank as shapes (e.g. (B, rows, cols)), flatten
-        ndim_block = len(self.shapes[0])
-        if F_out.ndim == len(self.shapes) + 1:
-            # e.g. F_out shape (B, 2N, Ne)
+        ndim_block = len(self.shapes[0])  # 2
+        # 如果 F_out 有 batch + block dims，就扁平化
+        if F_out.ndim == ndim_block + 1:  # 3 == 2+1
             F_flat = F_out.reshape((F_out.shape[0], -1))
         else:
-            # assume flattened shape (B, total_size)
             F_flat = F_out
         # 2) Build modulated blocks per sample
         def build_blocks(F_vec):
