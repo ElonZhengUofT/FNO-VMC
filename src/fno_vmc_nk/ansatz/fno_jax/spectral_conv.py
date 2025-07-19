@@ -67,7 +67,11 @@ class SpectralConv1d(nn.Module):
         # c: in_channels (输入通道)
         # o: out_channels (输出通道)
         # 我们在 'c' 维度上进行矩阵乘法，并保留 b, m, o 维度。
-        transformed_modes = jnp.einsum('bmc,mco->bmo', x_ft[:, :self.modes, :], W)
+        transformed_modes = jnp.einsum(
+            'bmhc,mco->bmho',
+            x_ft[:, :self.modes, :, :],
+            W
+        )
 
         # --- 修改 3: 正确初始化 out_ft ---
         # 输出的通道数应为 out_channels，并保持复数类型。
