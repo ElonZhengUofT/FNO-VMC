@@ -363,7 +363,7 @@ class AnsatzI(nn.Module):
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 
-        context = self.context_encoder(n)  # (B,K, 2N, P)
+        context = self.context_encoder(Y)  # (B,K, 2N, P)
         index = self.neprocessor(index_encoding(B, Num_Ne, beta=0))  # (B, K, Ne, P)
 
         orbitals = self.index_decoder(index, context)  # (B, K, 2N, Ne)
