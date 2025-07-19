@@ -311,10 +311,7 @@ class BackflowII(nn.Module):
         ndim_block = len(self.shapes[0])  # 2
         # 如果 F_out 有 batch + block dims，就扁平化
         print("F_out shape:", F_out.shape, "ndim_block:", ndim_block)
-        if F_out.ndim == ndim_block + 1:  # 3 == 2+1
-            F_flat = F_out.reshape((F_out.shape[0], -1))
-        else:
-            F_flat = F_out
+        F_flat = F_out.reshape((F_out.shape[0], -1))
         # 2) Build modulated blocks per sample
         def build_blocks(F_vec):
             # split if multiple blocks
