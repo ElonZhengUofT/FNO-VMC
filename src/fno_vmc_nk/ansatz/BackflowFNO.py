@@ -308,6 +308,7 @@ class BackflowII(nn.Module):
         # 1) Compute backflow output
         F_out = self.backflow_fn(n.astype(jnp.float32))
         #  - If output has same rank as shapes (e.g. (B, rows, cols)), flatten
+        ndim_block = len(self.shapes[0])
         if F_out.ndim == len(self.shapes) + 1:
             # e.g. F_out shape (B, 2N, Ne)
             F_flat = F_out.reshape((F_out.shape[0], -1))
