@@ -97,8 +97,13 @@ def TFS(size=16):
     #         hilbert=hilbert,
     #         **cfg.get("model_params", {})
     #     )
+    Ne = hilbert.n_fermions
+    n_orb = hilbert.size
+
     rng = jax.random.PRNGKey(0)
-    dummy_input = jnp.zeros((1,hilbert.size,), dtype=jnp.int32)
+    zero_vec = jnp.zeros((n_orb,), dtype=jnp.int32)
+    dummy_occ = zero_vec.at[:Ne].set(1)  # shape (n_orb,)
+    dummy_input = dummy_occ[None, :]  # shape (1, n_orb)
     template_A = nk.models.Slater2nd(
         hilbert=hilbert,
         generalized=True,
