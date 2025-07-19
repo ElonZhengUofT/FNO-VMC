@@ -2,6 +2,7 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
+from flax.linen import initializers
 
 import netket as nk
 from netket.experimental.models import Slater2nd
@@ -10,6 +11,9 @@ from netket.utils.types import NNInitFunc, DType
 from netket import jax as nkjax
 from src.fno_vmc_nk.ansatz.fno_jax import SpectralConv2d, SpectralConv1d
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
+
+SMALL_NORM = initializers.normal(1e-3)
+ZERO_BIAS = initializers.zeros
 
 #region Basic Utils
 def f_reshape(x,dim, channel=2):
@@ -94,7 +98,9 @@ class Projector(nn.Module):
         # output shape: (batch, n_features, width)
         return nn.Dense(
             self.hidden_features,
-            kernel_init=nn.initializers.normal(1e-2))(x)
+            kernel_init=SMALL_NORM,
+            bias_init=ZERO_BIAS
+        )(x)
 
 class Lifting(nn.Module):
     """
@@ -109,10 +115,12 @@ class Lifting(nn.Module):
         # x shape: (batch, n_features)
         # output shape: (batch, n_features, width)
         x = nn.Dense(self.hidden_features,
-                     kernel_init=nn.initializers.normal(1e-2))(x)
+                     kernel_init=SMALL_NORM,
+                        bias_init=ZERO_BIAS)(x)
         x = nn.gelu(x)
         x = nn.Dense(self.hidden_features,
-                        kernel_init=nn.initializers.normal(1e-2))(x)
+                        kernel_init=SMALL_NORM,
+                            bias_init=ZERO_BIAS)(x)
         return x
 
 
@@ -203,9 +211,17 @@ class IndexDecoder(nn.Module):
         x = jnp.concatenate([ctx, index], axis=-1)
 
         # 4) 两层 MLP -> (B,K,N,Ne,1) -> squeeze -> (B,K,N,Ne)
-        x = nn.Dense(self.hidden_dim)(x)
+        x = nn.Dense(
+            self.hidden_dim,
+            kernel_init=SMALL_NORM,
+            bias_init=ZERO_BIAS
+        )(x)
         x = nn.gelu(x)
-        x = nn.Dense(1)(x)
+        x = nn.Dense(
+            1,
+            kernel_init=SMALL_NORM,
+            bias_init=ZERO_BIAS
+        )(x)
         return x.squeeze(-1)  # (B, K, N, Ne)
 #endregion
 
@@ -322,7 +338,11 @@ class PositionalEmbedding(nn.Module):
         positions = positions.at[..., 1].set(positions[..., 1] / (self.Ly - 1))
 
         # 5️⃣ Lift to embedding dim
-        emb = nn.Dense(self.embed_dim)(positions)  # (B, Ne, embed_dim)
+        emb = nn.Dense(
+            self.embed_dim,
+            kernel_init=SMALL_NORM,
+            bias_init=ZERO_BIAS
+        )(positions)  # (B, Ne, embed_dim)
         emb = nn.gelu(emb)
         return emb
 
