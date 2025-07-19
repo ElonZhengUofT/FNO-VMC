@@ -98,7 +98,7 @@ def TFS(size=16):
     #         **cfg.get("model_params", {})
     #     )
     rng = jax.random.PRNGKey(0)
-    dummy_input = ...  # 一个能让 Slater2nd.apply 跑通的样本
+    dummy = jnp.zeros((hilbert.size,), dtype=jnp.int32)
     template_A = nk.models.Slater2nd(
         hilbert=hilbert,
         generalized=True,
