@@ -12,10 +12,8 @@ ssh belle << 'EOF'
   export XLA_FLAGS="--xla_gpu_autotune_level=2"
   export XLA_PYTHON_CLIENT_MEM_FRACTION=0.7
 
-  python3 -m src.scripts.train \
-    --ansatz backflow \
-    --config configs/one_dim_hubbard_fno_16.yaml \
-    --outdir results/fno_run \
+  python -m src.scripts.pretrain_generate \
+    --outdir pretrain_dataset \
     --logfile logs/fno_run.log
 EOF
 
