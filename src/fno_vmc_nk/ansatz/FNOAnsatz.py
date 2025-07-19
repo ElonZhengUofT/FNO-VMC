@@ -252,7 +252,10 @@ class NProcessor(nn.Module):
         u = PE + u  # (B, Lx, Ly, P)
 
         # 2) FNO
-        u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
+        if self.dim == 1:
+            u = FNOBlock1D(modes=self.modes1, width=self.D)(u)  # (B, Lx, 1, D)
+        elif self.dim == 2:
+            u = FNOBlock2D(modes1=self.modes1, modes2=self.modes2, width=self.D)(u)  # (B, Lx, Ly, D)
 
         # 3) Lifting
         u = Lifting(self.channel * self.D* self.K)(u)  # (B, Lx, Ly, 2DK)
