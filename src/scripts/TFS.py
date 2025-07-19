@@ -72,7 +72,7 @@ def TFS(size=16):
     wandb.init(
         project = args.wandb_project,
         config = cfg,
-        name = f"Slater_pretrain_fno_{size}",
+        name = f"TFS_{size}",
         sync_tensorboard = False,
         reinit = True,
         resume=False

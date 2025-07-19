@@ -273,7 +273,7 @@ class BackflowII(nn.Module):
     backflow_fn: nn.Module         # maps n -> (B,K,2N,Ne) or (B,rows,cols) or (B,total_size)
     generalized: bool = True
     restricted: bool = True
-    a: float = 0.0
+    a: float = -1.0  # scaling exponent for backflow modulation
 
     def setup(self):
         self.slater = Slater2nd(
