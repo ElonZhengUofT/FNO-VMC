@@ -38,6 +38,7 @@ def k_reshape(x, K=1):
     batch, Lx, Ly, C = x.shape
     D = C // K
     u = x.reshape(batch, K, Lx, Ly, D)
+    return u
 
 
 def flatten(x, channel=2):
