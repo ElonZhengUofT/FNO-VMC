@@ -85,7 +85,7 @@ class VMCTrainer:
         self.machine = machine
 
         # 3) prepare the MCState
-        if (phase == 2 or phase == 3) and variables is not None:
+        if variables is not None:
             self.vstate = nk.vqs.MCState(
                 sampler=sampler,
                 model=machine,
