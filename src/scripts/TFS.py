@@ -128,6 +128,9 @@ def TFS(size=16):
     ground_state = cfg.get("vmc", {}).get("GS", None)
     print(f"Using ground state energy: {ground_state}")
 
+    matrix = AnsatzI(hilbert=hilbert)
+    model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
+
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
     print("=== Stage 1: training only Slater parameters ===")
