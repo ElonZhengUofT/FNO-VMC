@@ -264,7 +264,9 @@ class NeProcessor(nn.Module):
         #) Embedding to P
         index = Projector(1, self.P)(index)
         index = nn.tanh(index)
-        index = FNOBlock1D(modes=8, width=self.P)(index)  # (B, Ne, P)
+        x4d = index[..., None, :]  # (B, Ne, 1, P)
+        x4d = FNOBlock1D(modes=8, width=self.P)(x4d)  # (B, Ne, 1, P)
+        index = index.squeeze(2)  # (B, Ne, P)
 
         #) Lifting to (B, Ne, PK)
         index = nn.Dense(self.P * self.K)(index)
