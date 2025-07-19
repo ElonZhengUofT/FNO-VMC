@@ -33,7 +33,7 @@ def save_flax_params(variables, path):
         f.write(param_bytes)
     print(f"Saved parameters to {path}")
 
-def load_flax_params(path):
+def load_flax_params(path, trainer=None):
     with open(path, "rb") as f:
         param_bytes = f.read()
 
@@ -97,18 +97,26 @@ def TFS(size=16):
     #         hilbert=hilbert,
     #         **cfg.get("model_params", {})
     #     )
-    matrix = AnsatzI()
-    model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
-    slater_variables = load_flax_params(f"./pretrain_dataset/fno_slater_pretrain_{size}.flax")
-
     rng = jax.random.PRNGKey(0)
-    dummy_state = hilbert.random_state(shots=1)  # 或者你常用的任何输入格式
-    full_vars = model.init(rng,
-                           dummy_state)  # 返回一个 {'params':{...}, ...} 的 FrozenDict
-    full_vars = unfreeze(full_vars)
-    full_vars['params']['slater'] = slater_variables['params']
-    merged_vars = freeze(full_vars)
+    dummy_input = ...  # 一个能让 Slater2nd.apply 跑通的样本
+    template_A = Slater2nd(
+        hilbert=hilbert,
+        generalized=True,
+        restricted=True,
+    ).init(rng, dummy_input)
 
+    with open(f'./pretrain_dataset/fno_slater_pretrain_{size}.flax', "rb") as f:
+        param_bytes = f.read()
+
+    loaded_A = from_bytes(template_A, param_bytes)
+
+    rng2 = jax.random.PRNGKey(1)
+    matrix = AnsatzI()
+    model = BackflowII(backflow_fn=matrix, hilbert=hilbert).init(rng2, dummy_input)
+
+    full = unfreeze(model)
+    full['params']['slater'] = loaded_A['params']
+    merged = freeze(full)
 
     params = cfg["hamiltonian"]["params"]
     ground_state = cfg.get("vmc", {}).get("GS", None)
@@ -122,28 +130,18 @@ def TFS(size=16):
         hamiltonian=hamiltonian,
         graph=graph,
         ansatz_model=model,
-        phase=1,  # 指定为第一阶段
+        phase=None,  # 指定为第一阶段
         vmc_params={**cfg.get("vmc", {})},
         logger=wandb,
         ground_state=ground_state,
+        variables=merged,
     )
+    template = trainer.vstate.variables
+    loaded_vars = from_bytes(template, param_bytes)
+    pre_trainer.vstate.replace(variables=loaded_vars)
     pre_trainer.run(out=os.path.join(args.outdir, "phase1"),
                  logfile=args.logfile)
 
-    print("=== Stage 2: training Backflow MLP ===")
-    trainer = VMCTrainer(
-        hilbert=hilbert,
-        hamiltonian=hamiltonian,
-        graph=graph,
-        ansatz_model=pre_trainer.vstate.model,  # 使用阶段一结束时的参数
-        phase=2,  # 指定为第二阶段
-        variables=pre_trainer.vstate.variables,
-        vmc_params={**cfg.get("vmc", {})},
-        logger=wandb,
-        ground_state=ground_state,
-    )
-    trainer.run(out=os.path.join(args.outdir, "phase2"),
-                 logfile=args.logfile)
     # trainer.estimate()
     # trainer.dump_orbitals_dataset(out_path=os.path.join(args.outdir, f"orbitals_dataset_fno_{size}.npz"))
     print("Training completed, saving model parameters...")
