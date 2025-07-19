@@ -360,7 +360,7 @@ class AnsatzI(nn.Module):
     def __call__(self, n):
         B, N_orbital = n.shape
 
-        Num_Ne = hilbert.n_fermions
+        Num_Ne = self.hilbert.n_fermions
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 
@@ -377,6 +377,7 @@ class AnsatzII(nn.Module):
      Use Inner Product to combine,
      Then build Naive Ne index encoding
      """
+    hilbert: nk.hilbert.SpinOrbitalFermions
     D: int = 32
     P: int = 32
     K: int = 4
@@ -400,7 +401,7 @@ class AnsatzII(nn.Module):
     def __call__(self, n):
         B, N_orbital = n.shape
 
-        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
+        Ne = self.hilbert.n_fermions
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 
@@ -417,6 +418,7 @@ class AnsatzIII(nn.Module):
      Use Index Mapping to combine,
      Then build Naive Ne index encoding
      """
+    hilbert: nk.hilbert.SpinOrbitalFermions
     D: int = 32
     K: int = 4
 
@@ -438,7 +440,7 @@ class AnsatzIII(nn.Module):
     def __call__(self, n):
         B, N_orbital = n.shape
 
-        Ne = jnp.sum(n, axis=-1).astype(jnp.int32)
+        Ne = self.hilbert.n_fermions
 
         Y = self.nprocessor(n)  # (B, K, 2N, D)
 
@@ -462,6 +464,7 @@ class AnsatzV(nn.Module):
     -softmax-> (B,N,4)
     Then for each site, add log probability
     """
+    hilbert: nk.hilbert.SpinOrbitalFermions
     num_sites: int
     d_model: int = 64
     modes: int = 16
