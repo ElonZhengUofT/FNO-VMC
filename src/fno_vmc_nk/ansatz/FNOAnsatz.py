@@ -111,6 +111,7 @@ class Lifting(nn.Module):
         x = nn.gelu(x)
         x = nn.Dense(self.hidden_features,
                         kernel_init=nn.initializers.normal(1e-2))(x)
+        return x
 
 
 class FNOBlock1D(nn.Module):
