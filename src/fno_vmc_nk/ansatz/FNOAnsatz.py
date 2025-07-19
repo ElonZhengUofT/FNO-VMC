@@ -363,7 +363,7 @@ class AnsatzI(nn.Module):
     K: int = 4
 
     dim: int = 1
-    modes1: int = 8
+    modes1: int = 9
     modes2: int = None
     channel: int = 2  # input channel, 2 for spin up/down
 
