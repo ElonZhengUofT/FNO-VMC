@@ -142,7 +142,7 @@ def TFS(size=16):
         ground_state=ground_state,
         variables=merged,
     )
-    template = trainer.vstate.variables
+    template = pre_trainer.vstate.variables
     loaded_vars = from_bytes(template, param_bytes)
     pre_trainer.vstate.replace(variables=loaded_vars)
     pre_trainer.run(out=os.path.join(args.outdir, "phase1"),
