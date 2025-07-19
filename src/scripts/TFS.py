@@ -34,7 +34,7 @@ def save_flax_params(variables, path):
     print(f"Saved parameters to {path}")
 
 def load_flax_params(path):
-    with open(phase2_path, "rb") as f:
+    with open(path, "rb") as f:
         param_bytes = f.read()
 
     variables = from_bytes(trainer.vstate.variables, param_bytes)
