@@ -24,10 +24,10 @@ def f_reshape(x,dim, channel=2):
     batch, features = x.shape[0], x.shape[-1]
     if dim == 1:
         L = features // channel
-        u = x.reshape(batch, L, 1, self.channel)
+        u = x.reshape(batch, L, 1, channel)
     if dim == 2:
         L = int((features / channel) ** 0.5)
-        u = x.reshape(batch, L, L, self.channel)
+        u = x.reshape(batch, L, L, channel)
     return u
 
 
