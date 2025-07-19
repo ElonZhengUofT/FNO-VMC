@@ -191,7 +191,7 @@ class IndexDecoder(nn.Module):
 
 
         # 1) index (B, K, Ne, P) -> (B, K, N, Ne, P) embedding to P
-        je = jnp.broadcast_to(je, (B, K, N, Ne, P))  # (B, K, N, Ne, P)
+        index = jnp.broadcast_to(index, (B, K, N, Ne, P))  # (B, K, N, Ne, P)
 
 
         # 2) 广播到 (B, K, N, Ne, P)
