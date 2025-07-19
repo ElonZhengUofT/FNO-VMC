@@ -129,16 +129,6 @@ def TFS(size=16):
     ground_state = cfg.get("vmc", {}).get("GS", None)
     print(f"Using ground state energy: {ground_state}")
 
-    model = nk.models.Slater2nd(
-        hilbert=hilbert,
-        generalized=True,
-        restricted=True,
-    )
-    variables = model.init(rng2, dummy_input)
-
-    full = unfreeze(variables)
-    full['params'] = loaded_A['params']
-    merged = freeze(full)
 
     # train the model
     # model = nk.models.RBM() # A Test model, replace when debug is done
