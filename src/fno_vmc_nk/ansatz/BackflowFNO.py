@@ -269,21 +269,13 @@ class BackflowI(nn.Module):
 
 
 class BackflowII(nn.Module):
-    """
-    Backflow II:
-    在 Slater2nd 基础上加入用户提供的 backflow_fn 调制:
-      M_modₖ = M_baseₖ * (1 + Fₖ(n) * N_sites^a),
-    其中 backflow_fn(n) 输出形状应与 Slater2nd.orbitals 对应的块形状一致，
-    Wavefunction ψ(n) = ∑ₖ det[M_modₖ(n)].
-    """
     hilbert: nk.hilbert.SpinOrbitalFermions
-    backflow_fn: nn.Module  # maps n -> (*shapes) or flattened total_size
+    backflow_fn: nn.Module         # maps n -> (B,K,2N,Ne) or (B,rows,cols) or (B,total_size)
     generalized: bool = True
     restricted: bool = True
-    a: float = 0.0                # exponent hyperparameter
+    a: float = 0.0
 
     def setup(self):
-        # 1) Base Slater2nd (预训练或初始化)
         self.slater = Slater2nd(
             hilbert=self.hilbert,
             generalized=self.generalized,
@@ -291,54 +283,74 @@ class BackflowII(nn.Module):
             kernel_init=default_kernel_init,
             param_dtype=jnp.float32,
         )
-        # 2) Determine block shapes (list of (rows, cols))
+        # 计算每块的形状
         if self.generalized:
             self.shapes = [tuple(self.slater.orbitals.shape)]
         else:
             self.shapes = [tuple(M.shape) for M in self.slater.orbitals]
-        # 3) Flatten sizes & cuts
         sizes = [r * c for (r, c) in self.shapes]
         self.total_size = sum(sizes)
-        self.cuts = np.cumsum(sizes)[:-1].tolist()
+        self.cuts = jnp.cumsum(jnp.array(sizes))[:-1].tolist()
 
     def __call__(self, n):
-        # Ensure occupancy is integer 0/1
+        # 1) 保证输入是 0/1 占据向量
         if not jnp.issubdtype(n.dtype, jnp.integer):
-            n = jnp.where(n > 0.5, 1, 0).astype(jnp.int32)
-        # 1) Compute backflow output
+            n = (n > 0.5).astype(jnp.int32)
+
+        # 2) 计算 backflow 输出
         F_out = self.backflow_fn(n.astype(jnp.float32))
-        #  - If output has same rank as shapes (e.g. (B, rows, cols)), flatten
-        ndim_block = len(self.shapes[0])  # 2
-        # 如果 F_out 有 batch + block dims，就扁平化
-        print("F_out shape:", F_out.shape, "ndim_block:", ndim_block)
-        F_flat = F_out.reshape((F_out.shape[0], -1))
-        # 2) Build modulated blocks per sample
-        def build_blocks(F_vec):
-            # split if multiple blocks
-            parts = jnp.split(F_vec, self.cuts, axis=-1) if len(self.shapes) > 1 else [F_vec]
-            blocks = []
+
+        # 3) 如果直接输出了 (B, K, rows, cols)，那么直接广播相乘
+        if F_out.ndim == 4:
+            # F_out: (B, K, rows, cols)
             N_sites = self.hilbert.n_orbitals // 2
-            for (r, c), part in zip(self.shapes, parts):
-                F_block = part.reshape((r, c))
-                M_base = self.slater.orbitals if self.generalized else None
-                if not self.generalized:
-                    # restricted: orbitals is list
-                    M_base = self.slater.orbitals[len(blocks)]
-                mod = 1.0 + F_block * (N_sites ** self.a)
-                blocks.append(M_base * mod)
-            return jnp.stack(blocks, axis=0)
-        # vectorize over batch
-        M_mod_all = jax.vmap(build_blocks)(F_flat)
-        # 3) Compute log-sum-exp of determinants
+            mod = 1.0 + F_out * (N_sites ** self.a)     # (B, K, rows, cols)
+            M_base = self.slater.orbitals               # (rows, cols)
+            # 广播到 (B, K, rows, cols)
+            M_mod_all = M_base * mod
+
+        else:
+            # 回退到原 flatten–split–reshape 逻辑
+            ndim_block = len(self.shapes[0])
+            B = F_out.shape[0]
+            if F_out.ndim == ndim_block + 1:
+                # e.g. (B, rows, cols) -> flatten
+                F_flat = F_out.reshape((B, -1))
+            else:
+                # assume already (B, total_size)
+                F_flat = F_out
+
+            # 把每个样本的向量切分回若干块
+            def build_blocks(F_vec):
+                parts = (jnp.split(F_vec, self.cuts, axis=-1)
+                         if len(self.shapes) > 1 else [F_vec])
+                blocks = []
+                N_sites = self.hilbert.n_orbitals // 2
+                for (r, c), part in zip(self.shapes, parts):
+                    F_block = part.reshape((r, c))
+                    M_base = (self.slater.orbitals if self.generalized
+                              else self.slater.orbitals[len(blocks)])
+                    mod = 1.0 + F_block * (N_sites ** self.a)
+                    blocks.append(M_base * mod)
+                return jnp.stack(blocks, axis=0)  # (K, r, c) 或 (1, r, c)
+
+            # 对整个 batch 向量化
+            M_mod_all = jax.vmap(build_blocks)(F_flat)
+            # 此时 M_mod_all.shape == (B, K, rows, cols) 或 (B,1,rows,cols)
+
+        # 4) 计算 log-sum-exp of determinants
         n_fermions = self.hilbert.n_fermions
+
         def sample_logsumexp(M_blocks, n_sample):
+            # M_blocks: (K, rows, cols)
             R = jnp.nonzero(n_sample, size=n_fermions, fill_value=0)[0]
             def logdet_k(Mk):
                 A = Mk[R, :]
                 return nkjax.logdet_cmplx(A)
-            logdets = jax.vmap(logdet_k)(M_blocks)
+            logdets = jax.vmap(logdet_k)(M_blocks)  # (K,)
             return jax.scipy.special.logsumexp(logdets)
-        # apply to single or batch
+
+        # 5) 根据输入是单样本还是 batch，返回结果
         if n.ndim == 1:
             return sample_logsumexp(M_mod_all[0], n)
         else:
