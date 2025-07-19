@@ -12,7 +12,7 @@ from netket import jax as nkjax
 from src.fno_vmc_nk.ansatz.fno_jax import SpectralConv2d, SpectralConv1d
 from src.fno_vmc_nk.ansatz.fno_ansatz_jax import FNOAnsatzFlax
 
-SMALL_NORM = initializers.normal(1e-3)
+SMALL_NORM = initializers.normal(1e-2)
 ZERO_BIAS = initializers.zeros
 
 #region Basic Utils
