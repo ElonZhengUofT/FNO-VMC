@@ -150,7 +150,7 @@ def TFS(size=16):
     # trainer.estimate()
     # trainer.dump_orbitals_dataset(out_path=os.path.join(args.outdir, f"orbitals_dataset_fno_{size}.npz"))
     print("Training completed, saving model parameters...")
-    variables = unfreeze(trainer.vstate.variables)
+    variables = unfreeze(pre_trainer.vstate.variables)
     save_flax_params(variables, os.path.join(args.outdir, f"fno_slater_pretrain_{size}.flax"))
 
     # Save the model parameters and upload to wan

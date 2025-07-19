@@ -75,6 +75,10 @@ class VMCTrainer:
             params,
         )
 
+        for path, _ in flax.traverse_util.flatten_dict(params).items():
+            label = param_labels[path]
+            print(path, "→", label)
+
         self.machine = machine
 
         # 3) prepare the MCState
