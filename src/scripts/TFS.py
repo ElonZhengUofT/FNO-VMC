@@ -117,7 +117,8 @@ def TFS(size=16):
 
     rng2 = jax.random.PRNGKey(1)
     matrix = AnsatzI()
-    model = BackflowII(backflow_fn=matrix, hilbert=hilbert).init(rng2, dummy_input)
+    model = BackflowII(backflow_fn=matrix, hilbert=hilbert)
+    model.init(rng2, dummy_input)
 
     full = unfreeze(model)
     full['params']['slater'] = loaded_A['params']
@@ -135,7 +136,7 @@ def TFS(size=16):
         hamiltonian=hamiltonian,
         graph=graph,
         ansatz_model=model,
-        phase=None,  # 指定为第一阶段
+        phase=None,
         vmc_params={**cfg.get("vmc", {})},
         logger=wandb,
         ground_state=ground_state,
