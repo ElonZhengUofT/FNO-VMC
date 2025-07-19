@@ -3,6 +3,7 @@ from flax import linen as nn
 from .utils import rfft2d, irfft2d
 from jax import random
 from jax import config
+import jax
 config.update("jax_enable_x64", False)
 
 class SpectralConv2d(nn.Module):
