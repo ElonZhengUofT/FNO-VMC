@@ -226,8 +226,8 @@ class NProcessor(nn.Module):
         u = f_reshape(n, self.dim, self.channel)  # (B, Lx, Ly, 2)
 
         # 1) Positional Encoding
-        PE = Projector(self.dim, self.P)(u)  # (B, Lx, Ly, P)
-        u = Projector(self.dim, self.P)(u)  # (B, Lx, Ly, P)
+        PE = Projector(self.dim, self.D)(u)  # (B, Lx, Ly, D)
+        u = Projector(self.dim, self.D)(u)  # (B, Lx, Ly, D)
         u = PE + u  # (B, Lx, Ly, P)
 
         # 2) FNO
