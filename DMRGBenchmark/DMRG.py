@@ -56,7 +56,7 @@ def run_dmrg(driver, mpo, max_bond=250):
 if __name__ == "__main__":
     t = 1.0
     U = 4.0
-    sizes = [64]
+    sizes = [32, 64]
 
     results = {}
     for L in sizes:
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         mpo    = build_hubbard_mpo(driver, L, t, U)
 
         # 对 L 越大，通常需要更大的 max_bond，更多 sweep，或者 OBC 以提高效率
-        max_bond = 250 if L <= 64 else 500
+        max_bond = 1000 if L <= 64 else 2000
         energy = run_dmrg(driver, mpo, max_bond=max_bond)
         results[L] = energy
         print(f" → L={L}, E0 = {energy:.15f}\n")

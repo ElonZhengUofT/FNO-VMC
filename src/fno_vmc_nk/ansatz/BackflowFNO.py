@@ -271,38 +271,82 @@ class BackflowI(nn.Module):
 class BackflowII(nn.Module):
     """
     Backflow II:
-    M_mod = M_base * (1 + F(n) * N_sites^a),
+    在 Slater2nd 基础上加入用户提供的 backflow_fn 调制:
+      M_modₖ = M_baseₖ * (1 + Fₖ(n) * N_sites^a),
+    其中 backflow_fn(n) 输出形状应与 Slater2nd.orbitals 对应的块形状一致，
     Wavefunction ψ(n) = ∑ₖ det[M_modₖ(n)].
     """
     hilbert: nk.hilbert.SpinOrbitalFermions
-    base_orbitals: jnp.ndarray       # shape (K, n_orbitals, n_fermions)
-    backflow_fn: nn.Module           # nn.Module mapping n -> (B, K, n_orbitals, n_fermions)
-    a: float                          # exponent hyperparameter
+    generalized: bool = True
+    restricted: bool = True
+    backflow_fn: nn.Module        # maps n -> (*shapes) or flattened total_size
+    a: float = 0.0                # exponent hyperparameter
+
+    def setup(self):
+        # 1) Base Slater2nd (预训练或初始化)
+        self.slater = Slater2nd(
+            hilbert=self.hilbert,
+            generalized=self.generalized,
+            restricted=self.restricted,
+            kernel_init=default_kernel_init,
+            param_dtype=jnp.float32,
+        )
+        # 2) Determine block shapes (list of (rows, cols))
+        if self.generalized:
+            self.shapes = [tuple(self.slater.orbitals.shape)]
+        else:
+            self.shapes = [tuple(M.shape) for M in self.slater.orbitals]
+        # 3) Flatten sizes & cuts
+        sizes = [r * c for (r, c) in self.shapes]
+        self.total_size = sum(sizes)
+        self.cuts = np.cumsum(sizes)[:-1].tolist()
 
     def __call__(self, n):
+        # Ensure occupancy is integer 0/1
         if not jnp.issubdtype(n.dtype, jnp.integer):
             n = jnp.where(n > 0.5, 1, 0).astype(jnp.int32)
-        F = self.backflow_fn(n.astype(jnp.float32))
-        # Number of spatial sites (half of spin orbitals)
-        N_sites = self.hilbert.n_orbitals // 2
-        modulation = 1.0 + F * (N_sites ** self.a)
-        M_base = jnp.expand_dims(self.base_orbitals, axis=0)
-        M_mod = M_base * modulation
-
+        # 1) Compute backflow output
+        F_out = self.backflow_fn(n.astype(jnp.float32))
+        #  - If output has same rank as shapes (e.g. (B, rows, cols)), flatten
+        if F_out.ndim == len(self.shapes) + 1:
+            # e.g. F_out shape (B, 2N, Ne)
+            F_flat = F_out.reshape((F_out.shape[0], -1))
+        else:
+            # assume flattened shape (B, total_size)
+            F_flat = F_out
+        # 2) Build modulated blocks per sample
+        def build_blocks(F_vec):
+            # split if multiple blocks
+            parts = jnp.split(F_vec, self.cuts, axis=-1) if len(self.shapes) > 1 else [F_vec]
+            blocks = []
+            N_sites = self.hilbert.n_orbitals // 2
+            for (r, c), part in zip(self.shapes, parts):
+                F_block = part.reshape((r, c))
+                M_base = self.slater.orbitals if self.generalized else None
+                if not self.generalized:
+                    # restricted: orbitals is list
+                    M_base = self.slater.orbitals[len(blocks)]
+                mod = 1.0 + F_block * (N_sites ** self.a)
+                blocks.append(M_base * mod)
+            return jnp.stack(blocks, axis=0)
+        # vectorize over batch
+        M_mod_all = jax.vmap(build_blocks)(F_flat)
+        # 3) Compute log-sum-exp of determinants
         n_fermions = self.hilbert.n_fermions
-
-        def sample_logdets(M_mod_sample, n_sample):
+        def sample_logsumexp(M_blocks, n_sample):
             R = jnp.nonzero(n_sample, size=n_fermions, fill_value=0)[0]
             def logdet_k(Mk):
                 A = Mk[R, :]
                 return nkjax.logdet_cmplx(A)
-            logdets = jax.vmap(logdet_k)(M_mod_sample)
+            logdets = jax.vmap(logdet_k)(M_blocks)
             return jax.scipy.special.logsumexp(logdets)
-
+        # apply to single or batch
         if n.ndim == 1:
-            return sample_logdets(M_mod[0], n)
+            return sample_logsumexp(M_mod_all[0], n)
         else:
-            return jax.vmap(sample_logdets)(M_mod, n)
+            return jax.vmap(sample_logsumexp)(M_mod_all, n)
+
+
 
 #endregion
 

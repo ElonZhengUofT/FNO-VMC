@@ -486,20 +486,10 @@ class AnsatzV(nn.Module):
         logits = self.project(x)
         # convert to log-probabilities along last axis
         log_probs = nn.log_softmax(logits)
-        return log_probs
 
-    def log_probability(self, occ):
-        # Compute total log-probability of each configuration
-        log_probs = self.__call__(occ)  # (B, N, 4)
-        # Derive state indices from occupancy
-        up = occ[:, : self.num_sites]
-        down = occ[:, self.num_sites:]
-        state_idx = up + 2 * down  # (B, N)
-        # Gather log-probabilities for actual states
+        # log summing over all sites
+        state_idx = occ_to_state_idx(occ)  # (B, N)
         lp = jnp.take_along_axis(log_probs, state_idx[..., None],
                                  axis=-1).squeeze(-1)
-        # Sum over sites -> (B,)
-        return jnp.sum(lp, axis=1)
-
-
+        return jnp.sum(lp, axis=1)  # (B,)
 #endregion

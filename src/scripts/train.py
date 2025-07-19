@@ -7,6 +7,8 @@ import torch.nn as nn
 import netket as nk
 from src.fno_vmc_nk.util import load_config, set_logger
 from src.fno_vmc_nk.hamiltonian import make_hamiltonian
+
+from src.fno_vmc_nk.ansatz.FNOAnsatz import AnsatzV
 # from src.fno_vmc_nk.Ansatz import make_ansatz
 from src.fno_vmc_nk.AnsatzJax import make_ansatz_jax
 from src.fno_vmc_nk.vmc_jax import VMCTrainer
