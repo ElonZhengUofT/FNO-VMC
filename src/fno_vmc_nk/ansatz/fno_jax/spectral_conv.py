@@ -54,7 +54,7 @@ class SpectralConv1d(nn.Module):
                        (self.in_channels, self.out_channels, self.modes))
         out_ft = jnp.zeros_like(x_ft)
         out_ft = out_ft.at[:, :self.modes, :].set(
-            jnp.einsum('bic, ioc -> boc', x_ft[:, :self.modes, :], W)
+            jnp.einsum('bcih,coih->boih', x_ft[:, :self.modes, :], W)
         )
         x1 = jnp.fft.irfft(out_ft, n=x.shape[1], axis=1)
         return x1
