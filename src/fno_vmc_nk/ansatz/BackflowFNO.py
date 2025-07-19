@@ -290,7 +290,7 @@ class BackflowII(nn.Module):
             self.shapes = [tuple(M.shape) for M in self.slater.orbitals]
         sizes = [r * c for (r, c) in self.shapes]
         self.total_size = sum(sizes)
-        self.cuts = jnp.cumsum(jnp.array(sizes))[:-1].tolist()
+        self.cuts = np.cumsum(sizes)[:-1].tolist()  # 不走 JAX tracing
 
     def __call__(self, n):
         # 1) 保证输入是 0/1 占据向量
